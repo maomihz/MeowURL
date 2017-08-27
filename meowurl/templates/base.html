@@ -7,7 +7,7 @@
                 <a href="{{url_for('edit', id=conv_id_str(paste.id))}}"><i class="fa fa-pencil" aria-hidden="true"></i></a>
             {% endif %}
             {% if not paste.password or get_authorized(paste.id) %}
-                {% if paste.protected %}<span class="fa fa-unlock"></span> {% endif %}{{ paste.content | decode | truncate(truncate_width, true) }}
+                {% if paste.protected %}<span class="fa fa-unlock-alt"></span> {% endif %}{{ paste.content | decode | truncate(truncate_width, true) }}
             {% else %}
                 <span class="fa fa-lock"></span> Password Protected
             {% endif %}
@@ -48,7 +48,7 @@
         </div>
         <div class="collapse navbar-collapse" id="mainnavbar">
             <ul class="nav navbar-nav">
-                <li><a href='/0'>Recents</a></li>
+                <li><a href='/'>Home</a></li>
                 <li><a href='https://maomihz.com'>Blog</a></li>
                 <li><a href='/about'>About</a></li>
             </ul>
