@@ -1,0 +1,16 @@
+<pre id="content">{{ paste.content | decode | e }}</pre>
+
+<script>
+    var clipboard = new Clipboard('.btn');
+    clipboard.on("success", function(e) {
+        document.getElementById("urlcopy").value = "{{'Copied'}}";
+        e.clearSelection();
+    });
+
+    clipboard.on("error", function(e) {
+        document.getElementById("urlcopy").value = "{{'Copy Manually'}}";
+    });
+</script>
+
+<input class="btn btn-default" type="button" id="urlcopy" class="btn" data-clipboard-target="#content" value="{{'Copy All'}}"
+<br>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{'Short URL Generated'}}{% endblock %}
+{% block head %}
+{{ super() }}
+    <script src="/static/js/clipboard.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<script>
+    var clipboard = new Clipboard('#urlcopy');
+    clipboard.on("success", function(e) {
+        document.getElementById("urlcopy").value = "{{'Copied'}}";
+        e.clearSelection();
+    });
+
+    clipboard.on("error", function(e) {
+        document.getElementById("urlcopy").value = "{{'Copy Manually'}}";
+    });
+
+</script>
+
+<h2>{{'Short URL Generated: '}}</h2>
+<form>
+    <div class="form-group">
+        <input class="form-control" type='text' id='url' value="{{ request.url_root }}{{ conv_id_str(paste.id) }}">
+    </div>
+    <input class='btn btn-default' id='urlcopy' type='button' data-clipboard-target="#url" value='{{'Copy'}}'>
+    <a href='/{{ conv_id_str(paste.id) }}' class='btn btn-default'>{{'View'}}</a>
+</form>
+
+
+{% endblock %}

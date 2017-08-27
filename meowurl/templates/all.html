@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} - All{% endblock %}
+{% block body %}
+{{ list_pastes(pastes, 100)}}
+{% endblock %}

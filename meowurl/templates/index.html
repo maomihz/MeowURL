@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} - Home{% endblock %}
+
+{% block body %}
+    <div style="text-align: right">
+
+    </div>
+    <!-- Input form -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+              <div>{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="btn-group btn-group-justified">
+                <a href="#" id="btn-url" class="btn btn-default active">URL</a>
+                <a href="#" id="btn-text" class="btn btn-default">Text</a>
+                <a href="#" id="btn-file" class="btn btn-default">File</a>
+            </div>
+        </div>
+        <div class="panel-body">
+
+            <form action="#" accept-charset="utf-8">
+
+                <!-- URL Form -->
+                <div id="form-url" class="collapse in">
+                    <div class="form-group">
+                        <label for="content">{{'URL'}}:</label>
+                        <input type="text" class="form-control" name="content">
+                    </div>
+                </div>
+
+
+                <!-- Text Form -->
+                <div id="form-text" class="collapse">
+                    <div class="form-group">
+                        <label for="content">{{'Content'}}:</label>
+                        <textarea class="form-control" name="content" rows="8"></textarea>
+                    </div>
+                </div>
+
+                <!-- File Form -->
+                <div id="form-file" class="collapse">
+                    <div class="form-group">
+                        <label for="fname">{{'File Name'}}:</label>
+                        <input type="text" class="form-control" name="content">
+                    </div>
+                    <div class="form-group">
+                        <label for="fhosts">{{'File Hosts'}}:</label>
+                        <button class="btn btn-default" type="button" name="content">Add Host</button>
+                    </div>
+
+                </div>
+
+                <div class="collapse in" id="advanced">
+                    <div class="form-group">
+                        <label for="password">{{'Password'}}:</label>
+                        <input class="form-control" id="password" name="password" type="password"></input>
+                    </div>
+                </div>
+
+                <button id="submit-paste" type="button" class="btn btn-default">Submit</button>
+            </form>
+        </div>
+    </div>
+    <div class="panel panel-default collapse" id="result">
+        <div class="panel-body">
+            <script src="/static/js/clipboard.min.js"></script>
+            <script>
+                var clipboard = new Clipboard('#urlcopy');
+                clipboard.on("success", function(e) {
+                    document.getElementById("urlcopy").value = "{{'Copied'}}";
+                    e.clearSelection();
+                });
+
+                clipboard.on("error", function(e) {
+                    document.getElementById("urlcopy").value = "{{'Copy Manually'}}";
+                });
+
+            </script>
+
+            <h2>{{'Short URL Generated: '}}</h2>
+            <form>
+                <div class="form-group">
+                    <input id="paste-result" class="form-control" type='text' value="" readonly>
+                </div>
+                <input class='btn btn-default' id='urlcopy' type='button' data-clipboard-target="#paste-result" value='{{'Copy'}}'>
+                <a href='#' target="_blank" class='btn btn-default'>{{'View'}}</a>
+            </form>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div id="help" class="panel-heading" style="cursor:pointer" data-toggle="collapse" data-target="#help-content">
+            Help <span class="fa fa-caret-right"></span>
+        </div>
+        <div id="help-content" class="collapse panel-collapse">
+        <div class="panel-body">
+            {{config.INTRO | markdown | safe }}
+        </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading" style="cursor:pointer;" data-toggle="collapse" data-target="#pastes-content">
+            Public Pastes <span class="fa fa-caret-right"></span>
+        </div>
+        <div id="pastes-content" class="collapse panel-collapse">
+            <div class="panel-body">
+                {{list_pastes(recent_pastes)}}
+            </div>
+        </div>
+    </div>
+    <script>
+    $(document).ready(function() {
+        var check_collapsing = function() {
+            return $('#form-text').hasClass('collapsing') ||
+            $('#form-url').hasClass('collapsing') ||
+            $('#form-url').hasClass('collapsing')
+        }
+        $("#btn-text").click(function(){
+            if (check_collapsing()) {
+                return;
+            }
+            $("#form-text").collapse('show');
+            $("#form-url").collapse('hide');
+            $("#form-file").collapse('hide');
+            $('#btn-text').addClass('active');
+            $('#btn-url').removeClass('active');
+            $('#btn-file').removeClass('active');
+
+        });
+        $("#btn-url").click(function(){
+            if (check_collapsing()) {
+                return;
+            }
+            $("#form-text").collapse('hide');
+            $("#form-url").collapse('show');
+            $("#form-file").collapse('hide');
+            $('#btn-text').removeClass('active');
+            $('#btn-url').addClass('active');
+            $('#btn-file').removeClass('active');
+        });
+        $("#btn-file").click(function(){
+            if (check_collapsing()) {
+                return;
+            }
+            $("#form-text").collapse('hide');
+            $("#form-url").collapse('hide');
+            $("#form-file").collapse('show');
+            $('#btn-text').removeClass('active');
+            $('#btn-url').removeClass('active');
+            $('#btn-file').addClass('active');
+        });
+
+        $("#submit-paste").click(function() {
+            if ($('#btn-url').hasClass('active')) {
+                url = $("#form-url input")[0].value;
+                passwd = $("#password")[0].value;
+                if (url.length <= 0) {
+                    alert('URL');
+                    return;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/api/newUrl",
+                    data: {'content': url, 'password': passwd},
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log(data);
+                        if (data['success']) {
+                            $("#form-url input")[0].value = ''
+                            $("#result").collapse('show');
+                            $("#paste-result")[0].value = data['html_url'];``
+                            $("#result a")[0].href = data['html_url'];``
+                            console.log(data['paste']['content']);
+                        }
+                    }
+                });
+            } else if ($('#btn-text').hasClass('active')) {
+                text = $("#form-text textarea")[0].value;
+                passwd = $("#password")[0].value;
+                if (text.length <= 0) {
+                    alert('Text');
+                    return;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/api/newUrl",
+                    data: {'content': text, 'password': passwd},
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log(data);
+                        if (data['success']) {
+                            $("#form-url input")[0].value = ''
+                            $("#result").collapse('show');
+                            $("#paste-result")[0].value = data['html_url'];``
+                            $("#result a")[0].href = data['html_url'];``
+                            console.log(data['paste']['content']);
+                        }
+                    }
+                });
+            } else if ($('#btn-file').hasClass('active')) {
+                alert('File has not implemented yet');
+            }
+        })
+    })
+    </script>
+
+{% endblock %}

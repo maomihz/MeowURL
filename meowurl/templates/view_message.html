@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} - {{ paste.id }}{% endblock %}
+{% block head %}
+{{ super() }}
+    <script src="/static/js/clipboard.min.js"></script>
+{% endblock %}
+{% block body %}
+<div class="panel panel-default">
+    <div class="panel-heading clearfix">
+
+        <div class="btn-group">
+            <a class="btn btn-default" href="{{url_for('view_paste', id=conv_id_str(paste.id))}}">Plain</a>
+            <a class="btn btn-default" href="{{url_for('view_paste', id=conv_id_str(paste.id), format='md')}}">Markdown</a>
+            <a class="btn btn-default" href="{{url_for('view_paste', id=conv_id_str(paste.id), format='raw')}}">Raw</a>
+        </div>
+        {% if paste.protected %}
+        <button class="btn btn-default" style="border:none;background:none;cursor:default;" href="#">
+            {% if get_authorized(paste.id) %}
+            <span class="fa fa-unlock-alt"></span>
+            {% else %}
+            <span class="fa fa-lock"></span>
+            {% endif %}
+        </button>
+        {% endif %}
+
+        <div class="btn-group pull-right">
+            <a class="btn btn-default{% if not get_owned(paste.id) %} disabled{% endif %}" href="{{url_for('edit', id=conv_id_str(paste.id))}}">
+                <span class="fa fa-pencil"></span>
+            </a>
+        </div>
+    </div>
+    <div class="panel-body">
+        {% if format == "need auth" %}
+        <form action="" method='GET' accept-charset="utf-8">
+
+            <div class="form-group">
+                <label for="password">{{'Input Password to Unlock: '}}</label>
+                <input id="password" class="form-control" name="auth" type="password">
+            </div>
+            <input class="btn btn-default" type="submit" value="{{'Unlock'}}">
+        </form>
+        {% elif format == "plain" %}
+            {% include 'partials/plain.html' %}
+
+        {% elif format == "markdown" %}
+            {{ paste.content | decode | markdown | bleach | safe }}
+        {% else %}
+            {{'Content not found'}}
+        {% endif %}
+    </div>
+    <div class="panel-footer">
+        Posted by {{ paste.owner.name }} at {{ paste.date.strftime('%F %T') }} UTC
+    </div>
+</div>
+{% endblock %}

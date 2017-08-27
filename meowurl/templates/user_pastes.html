@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} - {{ user.name }}{% endblock %}
+{% block body %}
+<div class="panel panel-default">
+    <div class="panel-heading text-center">
+        <h1 class="panel-title">Pastes from {{user.name}}</h1>
+    </div>
+    <div class="panel-body">
+        {{ list_pastes(recent_pastes, 100) }}
+    </div>
+</div>
+
+{% endblock %}

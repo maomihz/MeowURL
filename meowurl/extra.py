@@ -1,0 +1,38 @@
+from meowurl import app
+import codecs
+import re
+
+URL_REGEX = re.compile(
+    '(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})')
+
+
+@app.template_global('conv_id_str')
+def conv_id_str(id):
+    '''Convert numerical ID to string or back'''
+    # Define the charset to use
+    charset = app.config['URL_CHARSET']
+    charset_len = len(charset)
+    # String to internal ID
+    if type(id) is str:
+        return sum(
+            charset.index(char) * (charset_len ** i)
+            for i, char in enumerate(reversed(id))
+        )
+    # Internal ID to string
+    elif type(id) is int:
+        result = []
+        while id > 0:
+            result.append(charset[id % charset_len])
+            id = id // charset_len
+        return ''.join(reversed(result))
+
+
+@app.template_filter('decode')
+def decode(text):
+    return codecs.decode(text, 'utf-8')
+
+
+@app.template_global('get_flashed_messages')
+def get_flashed_messages():
+    from meowurl import memcache
+    return memcache.get_flashed_messages()

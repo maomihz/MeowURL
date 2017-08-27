@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    Register
+                </div>
+                <div class="panel-body">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-danger">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    <form action="{{url_for('register')}}" method="POST" accept-charset="utf-8">
+                    <div class="form-group">
+                        <label for="username">Username: </label>
+                        <input id="username" class="form-control" name="username" type="text" value="{{temp_account_info.username}}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email: </label>
+                        <input id="email" class="form-control" name="email" type="text" value="{{temp_account_info.email}}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password: </label>
+                        <input id="password" class="form-control" name="password" type="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="repassword">Repeat Password: </label>
+                        <input id="repassword" class="form-control" name="repeat_password" type="password" required>
+                    </div>
+                    {% if not config.OPEN_REGISTRATION %}
+                    <div class="form-group">
+                        <label for="invite_code">Invite Code:</label>
+                        <input id="invite_code" class="form-control" name="invite_code" value="{{temp_account_info.invite_code}}" type="text">
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary btn-block">
+                        {{'Register'}}
+                    </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body text-center">
+                    Already registered? <a href="{{url_for('login')}}">Sign in. </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

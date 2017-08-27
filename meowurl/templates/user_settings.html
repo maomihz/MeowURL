@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} - {{ g.user.name }}{% endblock %}
+{% block body %}
+
+{% if not config.OPEN_REGISTRATION %}
+<div class="panel panel-default">
+    <div class="panel-heading text-center">
+        <h1 class="panel-title">Invite Codes</h1>
+    </div>
+    <div class="panel-body">
+        <form method="post" action="{{request.path}}">
+            <div class="row form-group">
+                <div class="col-md-3 col-md-offset-3">
+                    <button class="btn btn-primary btn-block" name="gen" type="submit" value="1">Generate one</button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary btn-block" name="gen" type="submit" value="10">Generate 10</button>
+                </div>
+            </div>
+        </form>
+        <div class="table-responsive">
+        <table class="table table-striped" width="100%">
+            <tbody>
+            {% for i in g.user.invite_codes|reverse %}
+            <tr>
+               <td>
+                   {{i.code}}
+               </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
