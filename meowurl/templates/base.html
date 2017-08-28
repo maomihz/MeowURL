@@ -1,19 +1,18 @@
 {% macro list_pastes(pastes, truncate_width=30) -%}
     {% for paste in pastes -%}
     <p>
-            <span class="fa fa-globe"></span>
-            <a href="{{url_for('view_paste', id=conv_id_str(paste.id))}}">[{{ conv_id_str(paste.id) }}]</a>
-            {% if get_owned(paste.id) %}
-                <a href="{{url_for('edit', id=conv_id_str(paste.id))}}"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-            {% endif %}
-            {% if not paste.password or get_authorized(paste.id) %}
-                {% if paste.protected %}<span class="fa fa-unlock-alt"></span> {% endif %}{{ paste.content | decode | truncate(truncate_width, true) }}
-            {% else %}
-                <span class="fa fa-lock"></span> Password Protected
-            {% endif %}
-        </td>
-    {%- endfor %}
+        <span class="fa fa-globe"></span>
+        <a href="{{url_for('view_paste', id=conv_id_str(paste.id))}}">[{{ conv_id_str(paste.id) }}]</a>
+        {% if get_owned(paste.id) %}
+            <a href="{{url_for('edit', id=conv_id_str(paste.id))}}"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+        {% endif %}
+        {% if not paste.password or get_authorized(paste.id) %}
+            {% if paste.protected %}<span class="fa fa-unlock-alt"></span> {% endif %}{{ paste.content | decode | truncate(truncate_width, true) }}
+        {% else %}
+            <span class="fa fa-lock"></span> Password Protected
+        {% endif %}
     </p>
+    {%- endfor %}
 {%- endmacro %}
 
 {% macro clipboard() -%}
@@ -78,9 +77,9 @@
         </div>
         <div class="collapse navbar-collapse" id="mainnavbar">
             <ul class="nav navbar-nav">
-                <li><a href='/'>Home</a></li>
-                <li><a href='https://maomihz.com'>Blog</a></li>
-                <li><a href='https://github.com/maomihz/MeowURL' target="_blank">GitHub</a></li>
+                <li><a href='/'><span class="fa fa-home"></span> Home</a></li>
+                <li><a href='https://maomihz.com'><span class="fa fa-rss"></span> Blog</a></li>
+                <li><a href='https://github.com/maomihz/MeowURL' target="_blank"><span class="fa fa-github"></span> GitHub</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if g.user and not g.user.anonymous %}
