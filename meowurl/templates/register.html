@@ -34,7 +34,7 @@
                     {% if not config.OPEN_REGISTRATION %}
                     <div class="form-group">
                         <label for="invite_code">Invite Code:</label>
-                        <input id="invite_code" class="form-control" name="invite_code" value="{{invite_code}}" type="text">
+                        <input id="invite_code" class="form-control" name="invite_code" value="{{invite_code or temp_account_info.invite_code or ''}}" type="text">
                     </div>
                     {% endif %}
                     <button type="submit" class="btn btn-primary btn-block">
