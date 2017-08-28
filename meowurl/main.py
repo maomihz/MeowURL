@@ -6,7 +6,7 @@ import contextlib
 
 from meowurl import app, memcache, cache, db
 from meowurl.extra import conv_id_str
-from meowurl.dbmodels import Paste, User
+from meowurl.dbmodels import Paste, User, InviteCode
 
 
 @app.template_global('get_authorized')
@@ -109,7 +109,7 @@ def login():
 @app.route('/register.do', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
-        if g.user:
+        if not g.user.anonymous:
             return redirect('/')
         return render_template('register.html',
                                temp_account_info=memcache.get('temp'),
@@ -286,3 +286,9 @@ def view_paste(id, format):
         else:
             return redirect(request.url_root + id)
     return render_template('view_message.html', paste=paste, format=format)
+
+
+@app.route('/invites.do')
+def invites():
+    invite_codes = InviteCode.query.filter(InviteCode.owner == None).all()
+    return render_template('invites.html', invite_codes=invite_codes)

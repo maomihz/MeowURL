@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body %}
+
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for i in invite_codes %}
+        <tr class="invite-code">
+            <td class="code">{{i.code}}</td>
+            <td>
+                <a href="{{url_for('register', i=i.code)}}"class="btn btn-default">Use Code</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+{% endblock %}

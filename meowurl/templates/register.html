@@ -14,6 +14,11 @@
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
+                    {% if not config.OPEN_REGISTRATION %}
+                    <div class="alert alert-warning">
+                        You need an invite code to register. Check <a href="{{url_for('invites')}}">this page</a> for invite codes, if you're lucky. 
+                    </div>
+                    {% endif %}
                     <form action="{{url_for('register')}}" method="POST" accept-charset="utf-8">
                     <div class="form-group">
                         <label for="username">Username: </label>
