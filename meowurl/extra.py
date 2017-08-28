@@ -1,4 +1,5 @@
 from meowurl import app
+from flask import request
 import codecs
 import re
 
@@ -36,3 +37,11 @@ def decode(text):
 def get_flashed_messages():
     from meowurl import memcache
     return memcache.get_flashed_messages()
+
+# http://flask.pocoo.org/snippets/45/
+def request_wants_json():
+    best = request.accept_mimetypes \
+        .best_match(['application/json', 'text/html'])
+    return best == 'application/json' and \
+        request.accept_mimetypes[best] > \
+        request.accept_mimetypes['text/html']

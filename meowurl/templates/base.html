@@ -29,6 +29,16 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
+<script>
+var csrf_token = "{{ csrf_token() }}";
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+        }
+    });
+</script>
 {% endblock %}
 <style>
 #login-dp{
@@ -148,5 +158,57 @@
 &copy; 2017 <span class="glyphicon glyphicon-heart"></span> MaomiHz{% if config.VERSION %} | {{ config.VERSION }}{% endif %}
 </div>
 {% endblock %}
+<div id="loginError" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Login Error: </h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    $('#login-dp form').submit(function() {
+        var username = $('#login-dp input[name="username"]').val();
+        var password = $('#login-dp input[name="password"]').val();
+        if (!username || !password) {
+            return false;
+        }
+
+        var tmp = $(this).html()
+        $(this).html('<span class="fa fa-cog fa-spin fa-fw"></span>');
+
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('login')}}",
+            data: {'username': username, 'password': password},
+            dataType: 'json',
+            success: function(data) {
+                console.log(data);
+                if (data['success']) {
+                    location.reload();
+                } else {
+                    $('#login-dp input[name="username"]').val(username);
+                    $('#loginError .modal-body').html('');
+                    $.each(data['error'], function(i, val) {
+                        $('#loginError .modal-body')
+                        .append('<div class="alert alert-danger">' + val + '</div>')
+                    })
+                    $('#loginError').modal();
+                }
+            }
+        });
+
+        $(this).html(tmp);
+        return false;
+    })
+</script>
 </body>
 </html>

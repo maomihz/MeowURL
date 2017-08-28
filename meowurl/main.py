@@ -1,14 +1,15 @@
-from flask import render_template, request, redirect, g, abort, url_for
+from flask import render_template, request, redirect, g, abort, url_for, jsonify
 
 import codecs
 from uuid import uuid4
 import contextlib
 
-from meowurl import app, memcache, cache, db
-from meowurl.extra import conv_id_str
+from meowurl import app, memcache, db
+from meowurl.extra import conv_id_str, request_wants_json
 from meowurl.dbmodels import Paste, User, InviteCode
 
 from meowurl.forms import LoginForm, RegisterForm
+
 
 
 @app.template_global('get_authorized')
@@ -37,7 +38,6 @@ def check_session():
     actual name. '''
     g.session_id = request.cookies.get('session_id') or str(uuid4())
     login = memcache.get_login()
-
     # if the user is already logged in then retrieve the user object from database
     # Otherwise retrieve the anonymous user
     if login:
@@ -77,10 +77,15 @@ def index():
 @app.route('/login.do', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+
     if form.validate_on_submit():
         memcache.set_login(form.username.data)
+        if request_wants_json():
+            return jsonify(success=True)
         return redirect(url_for('index'))
 
+    if request_wants_json():
+        return jsonify(success=False, error=[a for b in form.errors.values() for a in b])
     memcache.flash_form_errors(form)
     return render_template('login.html', form=form)
 
