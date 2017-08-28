@@ -130,11 +130,7 @@ class User(db.Model):
 
         # If open registration is not set, check and use invite code
         if not anonymous and not app.config['OPEN_REGISTRATION']:
-            if not invite_code:
-                raise AssertionError('Invite code required!')
-            invite_valid = InviteCode.use_code(invite_code)
-            if not invite_valid:
-                raise AssertionError('Invalid Invite Code!')
+            InviteCode.use_code(invite_code)
         db.session.add(user)
         db.session.commit()
         return user

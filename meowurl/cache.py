@@ -55,6 +55,11 @@ class Client(pylibmc.Client):
         flashes.append(message)
         self.set('flash', flashes)
 
+    def flash_form_errors(self, form):
+        for v in form.errors.values():
+            for e in v:
+                self.flash(e)
+
     def get_flashed_messages(self):
         flashes = self.get('flash')
         self.delete('flash')

@@ -1,8 +1,6 @@
-import os
-# System Configurations
-
 class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = True
 
     # These are essential configuration
     SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/meowurl'
@@ -12,7 +10,6 @@ class Config:
     ]
     MEMCACHEDCLOUD_PASSWORD = None
     MEMCACHEDCLOUD_USERNAME = None
-
 
     DB_PREFIX = 'mu_'
     MEMCACHE_PREFIX = 'mu'

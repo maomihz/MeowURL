@@ -12,17 +12,19 @@
                             {% for message in messages %}
                                 <div class="alert alert-danger">{{ message }}</div>
                             {% endfor %}
+                        {% else %}
+                            {% if not config.OPEN_REGISTRATION %}
+                            <div class="alert alert-warning">
+                                You need an invite code to register. Check <a href="{{url_for('invites')}}">this page</a> for invite codes, if you're lucky.
+                            </div>
+                            {% endif %}
                         {% endif %}
                     {% endwith %}
-                    {% if not config.OPEN_REGISTRATION %}
-                    <div class="alert alert-warning">
-                        You need an invite code to register. Check <a href="{{url_for('invites')}}">this page</a> for invite codes, if you're lucky. 
-                    </div>
-                    {% endif %}
                     <form action="{{url_for('register')}}" method="POST" accept-charset="utf-8">
+                    {{ form.hidden_tag() }}
                     <div class="form-group">
                         <label for="username">Username: </label>
-                        <input id="username" class="form-control" name="username" type="text" value="{{temp_account_info.username}}" required>
+                        <input id="username" class="form-control" name="name" type="text" value="{{temp_account_info.name}}" required>
                     </div>
                     <div class="form-group">
                         <label for="email">Email: </label>

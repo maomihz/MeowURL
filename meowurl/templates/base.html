@@ -108,6 +108,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <form class="form" role="form" method="post" action="/login.do" accept-charset="UTF-8" id="login-nav">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <div class="form-group">
                                             <label class="sr-only" for="loginUsername">Email address</label>
                                             <input type="text" name="username" class="form-control" id="loginUsername" placeholder="Username" required>

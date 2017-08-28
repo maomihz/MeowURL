@@ -8,6 +8,8 @@ from meowurl import app, memcache, cache, db
 from meowurl.extra import conv_id_str
 from meowurl.dbmodels import Paste, User, InviteCode
 
+from meowurl.forms import LoginForm, RegisterForm
+
 
 @app.template_global('get_authorized')
 def get_authorized(id):
@@ -74,81 +76,44 @@ def index():
 
 @app.route('/login.do', methods=['GET', 'POST'])
 def login():
-    ''' Login page, if GET then just render template '''
-    if request.method == 'GET':
-        return render_template('login.html')
+    form = LoginForm()
+    if form.validate_on_submit():
+        memcache.set_login(form.username.data)
+        return redirect(url_for('index'))
 
-    # get and check user name
-    username = request.form.get('username')
-    if not username:
-        memcache.flash('Please input user name')
-        return redirect(url_for('login'))
-
-    # Look up the user name in database
-    user = User.get_user(username)
-    if not user:
-        memcache.flash('User does not exist')
-        return redirect(url_for('login'))
-
-    # get and check password
-    password = request.form.get('password')
-    if not password:
-        memcache.flash('Please input password')
-        return redirect(url_for('login'))
-
-    # All tests passed
-    if not user.check_password(password):
-        memcache.flash('Incorrect password')
-        return redirect(url_for('login'))
-
-    # Set login and redirect to index page
-    memcache.set_login(username.lower())
-    return redirect(url_for('index'))
+    memcache.flash_form_errors(form)
+    return render_template('login.html', form=form)
 
 
 @app.route('/register.do', methods=['GET', 'POST'])
 def register():
-    if request.method == 'GET':
-        if not g.user.anonymous:
-            return redirect('/')
-        return render_template('register.html',
-                               temp_account_info=memcache.get('temp'),
-                               invite_code=request.args.get('i'))
+    # User already logged in, do not show the page
+    if not g.user.anonymous:
+        return redirect(url_for('index'))
 
-    # Get and check the user name
-    username = request.form.get('username')
-    email = request.form.get('email')
-    password = request.form.get('password')
-    repeat_password = request.form.get('repeat_password')
-    invite_code = request.form.get('invite_code')
+    form = RegisterForm()
 
+    # Temporarily store user names
     memcache.set('temp', {
-        'username': username,
-        'email': email,
-        'invite_code': invite_code
+        'name': request.form.get('name', ''),
+        'email': request.form.get('email', ''),
+        'invite_code': request.form.get('invite_code', '')
     })
 
-    if not username:
-        memcache.flash('Please input user name')
-    elif not email:
-        memcache.flash('Please enter email address')
-    elif not password or not repeat_password:
-        memcache.flash('Please input passwords')
-    elif password != repeat_password:
-        memcache.flash('Password does not match!')
-    else:
-        # All checks passed
-        try:
-            User.add_user(username, email, password, invite_code)
-        except AssertionError as e:
-            memcache.flash(str(e))
-            return redirect(url_for('register'))
-        memcache.set_login(username)
+    if form.validate_on_submit():
+        User.add_user(form.name.data,
+                      form.email.data,
+                      form.password.data,
+                      form.invite_code.data)
+        memcache.set_login(form.name.data.lower())
         memcache.delete('temp')
         return redirect(url_for('index'))
 
-    # Some tests not pass
-    return redirect(url_for('register'))
+    memcache.flash_form_errors(form)
+    return render_template('register.html',
+                           temp_account_info=memcache.get('temp'),
+                           invite_code=request.args.get('i'),
+                           form=form)
 
 
 @app.route('/logout.do')
