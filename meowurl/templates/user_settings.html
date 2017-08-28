@@ -5,25 +5,25 @@
 {% if not config.OPEN_REGISTRATION %}
 <div class="panel panel-default">
     <div class="panel-heading text-center">
-        <h1 class="panel-title">Invite Codes</h1>
+        <h1 class="panel-title">Invite Codes ({{g.user.invites_left}})</h1>
     </div>
     <div class="panel-body">
         <form method="post" action="{{request.path}}">
             <div class="row form-group">
                 <div class="col-md-3 col-md-offset-3">
-                    <button class="btn btn-primary btn-block" name="gen" type="submit" value="1">Generate one</button>
+                    <button id="gen1" class="btn btn-primary btn-block" name="gen" type="submit" value="1">Generate one</button>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-primary btn-block" name="gen" type="submit" value="10">Generate 10</button>
+                    <button id="gen10" class="btn btn-primary btn-block" name="gen" type="submit" value="10">Generate 10</button>
                 </div>
             </div>
         </form>
         <div class="table-responsive">
-        <table class="table table-striped" width="100%">
+        <table class="table table-hover" width="100%">
             <tbody>
             {% for i in g.user.invite_codes|reverse %}
             <tr>
-               <td>
+               <td class="invitecode">
                    {{i.code}}
                </td>
             </tr>
@@ -33,6 +33,73 @@
         </div>
     </div>
 </div>
+
+<div id="inviteModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Invite</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="inviteCodeText">Invite Code: </label>
+                        <div class="input-group">
+                            <input id="inviteCodeText" class="form-control" type="text" readonly />
+                            <span class="input-group-btn">
+                                <button type="button" id="inviteCodeButton" class="btn btn-default" data-clipboard-target="#inviteCodeText" data-toggle="tooltip" data-trigger="manual" title="Copied!">Copy</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inviteLinkText">Invite Link: </label>
+                        <div class="input-group">
+                            <input id="inviteLinkText" class="form-control" type="text" readonly />
+                            <span class="input-group-btn">
+                                <button type="button" id="inviteLinkButton" class="btn btn-default" data-clipboard-target="#inviteLinkText" data-toggle="tooltip" data-trigger="manual" title="Copied!">Copy</button>
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-default" target="_blank">Open Link <span class="fa fa-external-link"></span> </a>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+</div>
 {% endif %}
+{{ clipboard() }}
+<script>
+    $('.invitecode').click(function() {
+        var code = $.trim($(this).html());
+        var link = window.location.origin + "{{url_for('register')}}?i=" + code;
+        $('#inviteCodeText')[0].value = code;
+        $('#inviteLinkText')[0].value = link;
+        $('#inviteModal a')[0].href = link;
+        $('#inviteModal').modal();
+    })
+
+    $('#inviteCodeButton, #inviteLinkButton').on({
+        'mouseleave': function() {
+            $(this).tooltip('hide');
+        }
+    })
+
+    var copyCode = new Clipboard('#inviteCodeButton');
+    copyCode.on("success", function(e) {
+        $('#inviteCodeButton').tooltip('show');
+        e.clearSelection()
+    });
+
+    var copyLink = new Clipboard('#inviteLinkButton');
+    copyLink.on("success", function(e) {
+        $('#inviteLinkButton').tooltip('show');
+        e.clearSelection()
+    });
+</script>
 
 {% endblock %}

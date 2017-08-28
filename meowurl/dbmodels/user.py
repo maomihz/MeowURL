@@ -106,8 +106,10 @@ class User(db.Model):
         return paste
 
     def generate_code(self, count=1):
-        codes = InviteCode.generate_code(count)
+        available = min(self.invites_left, count)
+        codes = InviteCode.generate_code(available)
         self.invite_codes.extend(codes)
+        self.invites_left -= available
         db.session.commit()
         return codes
 

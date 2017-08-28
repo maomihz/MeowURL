@@ -9,14 +9,13 @@
 <script>
     var clipboard = new Clipboard('#urlcopy');
     clipboard.on("success", function(e) {
-        document.getElementById("urlcopy").value = "{{'Copied'}}";
+        $("#urlcopy").value = "{{'Copied'}}";
         e.clearSelection();
     });
 
     clipboard.on("error", function(e) {
-        document.getElementById("urlcopy").value = "{{'Copy Manually'}}";
+        $("#urlcopy").value = "{{'Copy Manually'}}";
     });
-
 </script>
 
 <h2>{{'Short URL Generated: '}}</h2>

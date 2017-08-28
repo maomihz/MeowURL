@@ -17,7 +17,7 @@ class InviteCode(db.Model):
         self.code = code
 
     @staticmethod
-    def generate_code(count=1, length=64):
+    def generate_code(count=1, length=32):
         codes = []
         chars = ascii_letters + digits
         for i in range(count):

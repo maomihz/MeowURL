@@ -109,8 +109,11 @@ def login():
 @app.route('/register.do', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
+        if g.user:
+            return redirect('/')
         return render_template('register.html',
-                               temp_account_info=memcache.get('temp'))
+                               temp_account_info=memcache.get('temp'),
+                               invite_code=request.args.get('i'))
 
     # Get and check the user name
     username = request.form.get('username')
