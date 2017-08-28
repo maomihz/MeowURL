@@ -8,7 +8,7 @@ from meowurl import app, memcache, db
 from meowurl.extra import conv_id_str, request_wants_json
 from meowurl.dbmodels import Paste, User, InviteCode
 
-from meowurl.forms import LoginForm, RegisterForm
+from meowurl.forms import LoginForm, RegisterForm, UserSettingsForm
 
 
 
@@ -141,21 +141,23 @@ def view_user(username):
         recent_pastes = user.pastes.order_by(-Paste.id).all()
         return render_template('user_pastes.html', user=user, recent_pastes=recent_pastes)
 
+
 @app.route('/settings.do', methods=['GET', 'POST'])
 def user_settings():
-    if not g.user:
-        return redirect('/')
+    if g.user.anonymous:
+        return redirect(url_for('index'))
 
-    if request.method == 'POST':
-        try:
-            gencode = int(request.form.get('gen'))
-        except:
-            pass
-        else:
-            g.user.generate_code(gencode)
+    form = UserSettingsForm()
+    if form.validate_on_submit():
+        codes = g.user.generate_code(form.gencode.data)
+        if request_wants_json():
+            return jsonify(success=True, codes=[c.code for c in codes],
+                           left=g.user.invites_left)
         return redirect(request.base_url)
-    else:
-        return render_template('user_settings.html')
+
+    if request_wants_json():
+        return jsonify(success=False, error=[a for b in form.errors.values() for a in b])
+    return render_template('user_settings.html', form=form)
 
 
 @app.route('/short.do', methods=['POST'])

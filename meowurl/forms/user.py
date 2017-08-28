@@ -55,22 +55,27 @@ class RegisterForm(FlaskForm):
 
         if User.get_user(self.name.data):
             self.name.errors.append('Username Already Registered!')
+            return False
 
         # Check for email existance
         email_user = User.query.filter(User.email == self.email.data).first()
         if email_user:
             self.email.errors.append('Email Already Registered!')
+            return False
 
         # Check password
         if self.password.data != self.repeat_password.data:
             self.password.errors.append('Password does not match!')
+            return False
 
         # Check for invite code
         if not app.config['OPEN_REGISTRATION']:
             if not self.invite_code.data:
                 self.password.errors.append('Invite code is required!')
+                return False
             else:
                 code = InviteCode.query.get(self.invite_code.data)
                 if not code:
                     self.password.errors.append('Invite code is invalid!')
+                    return False
         return True

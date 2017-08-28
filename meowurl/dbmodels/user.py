@@ -77,23 +77,10 @@ class User(db.Model):
     def password(self, password):
         if not self.anonymous:
             password_len = len(password)
-            if password_len < app.config['MIN_PASSWORD_LENGTH']:
-                raise AssertionError('Password too short!')
-            if password_len > app.config['MAX_PASSWORD_LENGTH']:
-                raise AssertionError('Password too long!')
             self._password = generate_password_hash(password, method='pbkdf2:sha256:1200')
 
     @db.validates('email')
     def check_email(self, key, email):
-        email_regex = re.compile(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)')
-        if not self.anonymous:
-            if not email_regex.match(email):
-                raise AssertionError('Email format invalid!')
-
-            user = User.check_email_exist(email)
-            if user:
-                raise AssertionError('Email address already exist!')
-
         return email
 
     def check_password(self, password):

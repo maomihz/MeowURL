@@ -5,21 +5,22 @@
 {% if not config.OPEN_REGISTRATION %}
 <div class="panel panel-default">
     <div class="panel-heading text-center">
-        <h1 class="panel-title">Invite Codes ({{g.user.invites_left}})</h1>
+        <h1 class="panel-title" id="invite-panel-title">Invite Codes (<span>{{g.user.invites_left}}</span>)</h1>
     </div>
     <div class="panel-body">
-        <form method="post" action="{{request.path}}">
+        <form id="genCode" method="post" action="{{request.path}}">
+            {{form.hidden_tag()}}
             <div class="row form-group">
                 <div class="col-md-3 col-md-offset-3">
-                    <button id="gen1" class="btn btn-primary btn-block" name="gen" type="submit" value="1">Generate one</button>
+                    <button id="gen1" class="btn btn-primary btn-block" name="gencode" type="submit" value="1">Generate one</button>
                 </div>
                 <div class="col-md-3">
-                    <button id="gen10" class="btn btn-primary btn-block" name="gen" type="submit" value="10">Generate 10</button>
+                    <button id="gen10" class="btn btn-primary btn-block" name="gencode" type="submit" value="10">Generate 10</button>
                 </div>
             </div>
         </form>
         <div class="table-responsive">
-        <table class="table table-hover" width="100%">
+        <table id="inviteCodeTable" class="table table-hover" width="100%">
             <tbody>
             {% for i in g.user.invite_codes|reverse %}
             <tr>
@@ -74,6 +75,7 @@
 {% endif %}
 {{ clipboard() }}
 <script>
+function refresh_table() {
     $('.invitecode').click(function() {
         var code = $.trim($(this).html());
         var link = window.location.origin + "{{url_for('register')}}?i=" + code;
@@ -92,14 +94,61 @@
     var copyCode = new Clipboard('#inviteCodeButton');
     copyCode.on("success", function(e) {
         $('#inviteCodeButton').tooltip('show');
-        e.clearSelection()
+        e.clearSelection();
     });
 
     var copyLink = new Clipboard('#inviteLinkButton');
     copyLink.on("success", function(e) {
         $('#inviteLinkButton').tooltip('show');
-        e.clearSelection()
+        e.clearSelection();
     });
+}
+refresh_table();
+</script>
+<div id="invite-error" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Error: </h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('#genCode .btn').click(function(e) {
+        $.ajax({
+            url: "{{url_for('user_settings')}}",
+            type: 'post',
+            dataType: 'json',
+            data: {
+                'gencode': $(this).val()
+            },
+            success: function(data) {
+                if (data['success']) {
+                    $.each(data['codes'], function(i, val) {
+                        $('#inviteCodeTable').prepend('<tr><td class="invitecode">' + val + '</td></tr>');
+                    });
+                    $('#invite-panel-title span').html(data['left']);
+
+                    refresh_table();
+                } else {
+                    $('#invite-error .modal-body').html('');
+                    $.each(data['error'], function(i, val) {
+                        $('#invite-error .modal-body').append('<div class="alert alert-danger">' + val + '</div>');
+                    });
+                    $('#invite-error').modal();
+                }
+            }
+        });
+        return false;
+    });
+
 </script>
 
 {% endblock %}
