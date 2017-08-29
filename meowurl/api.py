@@ -27,11 +27,13 @@ def api_recent_pastes():
                     }), {'Content-Type': 'application/json'}
 
 
-@app.route('/api/newUrl', methods=['POST'])
+@app.route('/api/newPaste', methods=['POST'])
 def new_url():
     # Assign content and password from form
     content = request.form.get('content')
     password = request.form.get('password')
+    format = request.form.get('format')
+    
     paste = None
     result = {}
 
@@ -42,7 +44,7 @@ def new_url():
     else:
         # Add a new paste
         try:
-            paste = g.user.add_paste(content, password)
+            paste = g.user.add_paste(content, password, format=format)
         except AssertionError as e:
             result['success'] = False
             result['reason'] = str(e)

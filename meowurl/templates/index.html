@@ -114,59 +114,83 @@
         </div>
     </div>
     <script>
-    $(document).ready(function() {
-        var check_collapsing = function() {
-            return $('#form-text').hasClass('collapsing') ||
-            $('#form-url').hasClass('collapsing') ||
-            $('#form-url').hasClass('collapsing')
-        }
-        $("#btn-text").click(function(){
-            if (check_collapsing()) {
-                return;
+        "use strict";
+        
+        $(document).ready(function() {
+            var check_collapsing = function() {
+                return $('#form-text').hasClass('collapsing') ||
+                $('#form-url').hasClass('collapsing') ||
+                $('#form-url').hasClass('collapsing')
             }
-            $("#form-text").collapse('show');
-            $("#form-url").collapse('hide');
-            $("#form-file").collapse('hide');
-            $('#btn-text').addClass('active');
-            $('#btn-url').removeClass('active');
-            $('#btn-file').removeClass('active');
-
-        });
-        $("#btn-url").click(function(){
-            if (check_collapsing()) {
-                return;
-            }
-            $("#form-text").collapse('hide');
-            $("#form-url").collapse('show');
-            $("#form-file").collapse('hide');
-            $('#btn-text').removeClass('active');
-            $('#btn-url').addClass('active');
-            $('#btn-file').removeClass('active');
-        });
-        $("#btn-file").click(function(){
-            if (check_collapsing()) {
-                return;
-            }
-            $("#form-text").collapse('hide');
-            $("#form-url").collapse('hide');
-            $("#form-file").collapse('show');
-            $('#btn-text').removeClass('active');
-            $('#btn-url').removeClass('active');
-            $('#btn-file').addClass('active');
-        });
-
-        $("#submit-paste").click(function() {
-            if ($('#btn-url').hasClass('active')) {
-                url = $("#form-url input")[0].value;
-                passwd = $("#password")[0].value;
-                if (url.length <= 0) {
-                    alert('URL');
+            $("#btn-text").click(function(){
+                if (check_collapsing()) {
                     return;
                 }
+                $("#form-text").collapse('show');
+                $("#form-url").collapse('hide');
+                $("#form-file").collapse('hide');
+                $('#btn-text').addClass('active');
+                $('#btn-url').removeClass('active');
+                $('#btn-file').removeClass('active');
+
+            });
+            $("#btn-url").click(function(){
+                if (check_collapsing()) {
+                    return;
+                }
+                $("#form-text").collapse('hide');
+                $("#form-url").collapse('show');
+                $("#form-file").collapse('hide');
+                $('#btn-text').removeClass('active');
+                $('#btn-url').addClass('active');
+                $('#btn-file').removeClass('active');
+            });
+            $("#btn-file").click(function(){
+                if (check_collapsing()) {
+                    return;
+                }
+                $("#form-text").collapse('hide');
+                $("#form-url").collapse('hide');
+                $("#form-file").collapse('show');
+                $('#btn-text').removeClass('active');
+                $('#btn-url').removeClass('active');
+                $('#btn-file').addClass('active');
+            });
+
+            $("#submit-paste").click(function() {
+                var cont, passwd, format;
+                
+                if ($('#btn-url').hasClass('active')) {
+                    cont = $("#form-url input")[0].value;
+                    passwd = $("#password")[0].value;
+                    format = 'url';
+                    
+                    if (!cont) {
+                        alert('No URL entered');
+                        return;
+                    }
+                } else if ($('#btn-text').hasClass('active')) {
+                    cont = $("#form-text textarea")[0].value;
+                    passwd = $("#password")[0].value;
+                    format = 'text';
+                    
+                    if (!cont) {
+                        alert('No text entered');
+                        return;
+                    }
+                } else if ($('#btn-file').hasClass('active')) {
+                    alert('File has not implemented yet');
+                    return;
+                }
+                
                 $.ajax({
                     type: "POST",
-                    url: "/api/newUrl",
-                    data: {'content': url, 'password': passwd},
+                    url: "/api/newPaste",
+                    data: {
+                        'content': cont,
+                        'password': passwd,
+                        'format': format
+                    },
                     dataType: 'json',
                     success: function(data) {
                         console.log(data);
@@ -179,34 +203,8 @@
                         }
                     }
                 });
-            } else if ($('#btn-text').hasClass('active')) {
-                text = $("#form-text textarea")[0].value;
-                passwd = $("#password")[0].value;
-                if (text.length <= 0) {
-                    alert('Text');
-                    return;
-                }
-                $.ajax({
-                    type: "POST",
-                    url: "/api/newUrl",
-                    data: {'content': text, 'password': passwd},
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        if (data['success']) {
-                            $("#form-url input")[0].value = ''
-                            $("#result").collapse('show');
-                            $("#paste-result")[0].value = data['html_url'];``
-                            $("#result a")[0].href = data['html_url'];``
-                            console.log(data['paste']['content']);
-                        }
-                    }
-                });
-            } else if ($('#btn-file').hasClass('active')) {
-                alert('File has not implemented yet');
-            }
-        })
-    })
+            })
+        });
     </script>
 
 {% endblock %}

@@ -8,6 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from meowurl import db, app
 from meowurl.extra import conv_id_str, URL_REGEX
 
+ALLOWED_FORMATS = ('url', 'text')
 
 class Paste(db.Model):
     __tablename__ = app.config['DB_PREFIX'] + 'paste'
@@ -18,7 +19,8 @@ class Paste(db.Model):
     # Binary UTF-8 encoded content and SHA256 Hash
     _content = db.Column('content', db.LargeBinary(), nullable=False)
     content_hash = db.Column(db.LargeBinary())
-    is_url = db.Column(db.Boolean())
+    # is_url = db.Column(db.Boolean())
+    format = db.Column(db.String(16))
 
     # Owner's username
     owner_name = db.Column(db.String(64), db.ForeignKey(app.config['DB_PREFIX'] + 'user.username'))
@@ -39,7 +41,7 @@ class Paste(db.Model):
     def content(self, content):
         self._content = codecs.encode(content, 'utf-8')
         self.content_hash = sha256(self._content).digest()
-        self.is_url = True if URL_REGEX.match(content) else False
+        # self.is_url = True if URL_REGEX.match(content) else False
 
     @db.validates('content')
     def validate_content(self, key, content):
@@ -49,6 +51,13 @@ class Paste(db.Model):
         if content_len > app.config['MAX_CONTENT_LENGTH']:
             raise AssertionError('Content Too Long!')
         return content
+        
+    @db.validates('format')
+    def validate_format(self, key, format):
+        if not format in ALLOWED_FORMATS:
+            raise AssertionError('Illegal format')
+            
+        return format
 
     @hybrid_property
     def password(self):
@@ -65,12 +74,13 @@ class Paste(db.Model):
             self.protected = False
 
 
-    def __init__(self, content, password=''):
+    def __init__(self, content, password='', format='text'):
         # Set password and contents
         self.content = content
         self.password = password
         self.edit_code = str(uuid4())
         self.date = datetime.utcnow()
+        self.format = format
 
     def check_edit_code(self, edit_code):
         return self.edit_code == edit_code
@@ -82,7 +92,7 @@ class Paste(db.Model):
         return dict(
             id=conv_id_str(self.id),
             content=codecs.decode(self.content, 'utf-8'),
-            is_url=self.is_url,
+            format=self.format,
             owner=self.owner.as_dict(),
             edit_code=self.edit_code,
             protected=self.protected,

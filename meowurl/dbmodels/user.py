@@ -55,6 +55,7 @@ class User(db.Model):
     def validate_username(self, key, username):
         username_regex = re.compile(r'^[a-z0-9][a-z0-9\._]+?$')
         anonymous_regex = re.compile(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+        
         if self.anonymous:
             if not anonymous_regex.match(username):
                 raise AssertionError('Illegal anonymous user!')
@@ -65,8 +66,11 @@ class User(db.Model):
                 raise AssertionError('You cannot register this reserved username!')
 
         user = User.query.get(username)
+        
+        # print(user)
         if user:
-            raise AssertionError('The username already exist!')
+            raise AssertionError('The username "%s" already exist!' % username)
+        
         return username
 
     @hybrid_property
@@ -86,8 +90,8 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
-    def add_paste(self, content, password):
-        paste = Paste(content, password)
+    def add_paste(self, content, password, **dargs):
+        paste = Paste(content, password, **dargs)
         self.pastes.append(paste)
         db.session.commit()
         return paste

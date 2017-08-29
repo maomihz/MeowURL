@@ -10,7 +10,7 @@ from meowurl.dbmodels import Paste, User, InviteCode
 
 from meowurl.forms import LoginForm, RegisterForm, UserSettingsForm
 
-
+db.create_all()
 
 @app.template_global('get_authorized')
 def get_authorized(id):
@@ -248,7 +248,7 @@ def view_paste(id, format):
         elif format in ['md', 'markdown']:
             format = 'markdown'
         elif format in ['redir']:
-            if paste.is_url:
+            if paste.format == 'url':
                 return redirect(content)
             format = 'plain'
         elif format in ['plain', 'code']:
