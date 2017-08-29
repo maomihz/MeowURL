@@ -16,21 +16,30 @@
 {%- endmacro %}
 
 {% macro clipboard() -%}
-<script src="/static/js/clipboard.min.js"></script>
+
 {%- endmacro %}
 <!DOCTYPE HTML>
 <html>
 <head>
+    
+<meta http-equiv="Pragma" content="no-cache">
+    
 <title>{% block title %}{{ config.TITLE }}{% endblock %}</title>
 {% block head %}
+
 <link rel="stylesheet" href="/static/css/bootstrap.min.css">
 <link rel="stylesheet" href="/static/css/font-awesome.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<script src="/static/js/jquery.min.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
+
+<script src="/static/js/clipboard.js"></script>
+<script src="/static/js/jquery.js"></script>
+<script src="/static/js/bootstrap.js"></script>
+<script src="/static/js/api.js?v=1"></script>
+<script src="/static/js/geetest.js"></script>
+
 <script>
-var csrf_token = "{{ csrf_token() }}";
+    var csrf_token = "{{ csrf_token() }}";
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
@@ -39,6 +48,25 @@ var csrf_token = "{{ csrf_token() }}";
         }
     });
 </script>
+
+<script src="/static/js/require.js"></script>
+<script>
+    require.config({
+        baseUrl: "/static",
+        urlArgs: "v=0"
+    });
+</script>
+
+<script>
+    "use strict";
+    
+    require([ "mod/util", "mod/captcha" ], function (util, captcha) {
+        Meow.captcha(function (dat, cb) {
+            captcha.modal(dat, cb);
+        });
+    });
+</script>
+
 {% endblock %}
 <style>
 #login-dp{
@@ -71,6 +99,7 @@ var csrf_token = "{{ csrf_token() }}";
 {% block style %}
 {% endblock %}
 </style>
+
 </head>
 
 <body>
@@ -210,5 +239,6 @@ var csrf_token = "{{ csrf_token() }}";
         return false;
     })
 </script>
+
 </body>
 </html>
