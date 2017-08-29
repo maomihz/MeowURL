@@ -37,7 +37,6 @@ class Config:
         'anonymous',
     ]
 
-
 class DebugConfig(Config):
     DEBUG = True
     TEMPLATE_AUTO_RELOAD = True

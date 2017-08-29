@@ -68,18 +68,18 @@
     </div>
     <div class="panel panel-default collapse" id="result">
         <div class="panel-body">
-            <script src="/static/js/clipboard.min.js"></script>
             <script>
-                var clipboard = new Clipboard('#urlcopy');
-                clipboard.on("success", function(e) {
-                    document.getElementById("urlcopy").value = "{{'Copied'}}";
-                    e.clearSelection();
-                });
+                require([ "js/clipboard" ], function (Clipboard) {
+                    var clipboard = new Clipboard('#urlcopy');
+                    clipboard.on("success", function(e) {
+                        document.getElementById("urlcopy").value = "{{'Copied'}}";
+                        e.clearSelection();
+                    });
 
-                clipboard.on("error", function(e) {
-                    document.getElementById("urlcopy").value = "{{'Copy Manually'}}";
+                    clipboard.on("error", function(e) {
+                        document.getElementById("urlcopy").value = "{{'Copy Manually'}}";
+                    });
                 });
-
             </script>
 
             <h2>{{'Short URL Generated: '}}</h2>
@@ -116,94 +116,91 @@
     <script>
         "use strict";
         
-        $(document).ready(function() {
-            var check_collapsing = function() {
-                return $('#form-text').hasClass('collapsing') ||
-                $('#form-url').hasClass('collapsing') ||
-                $('#form-url').hasClass('collapsing')
-            }
-            $("#btn-text").click(function(){
-                if (check_collapsing()) {
-                    return;
+        require([ "mod/util" ], function (util) {
+            $(document).ready(function() {
+                var check_collapsing = function() {
+                    return $('#form-text').hasClass('collapsing') ||
+                    $('#form-url').hasClass('collapsing') ||
+                    $('#form-url').hasClass('collapsing')
                 }
-                $("#form-text").collapse('show');
-                $("#form-url").collapse('hide');
-                $("#form-file").collapse('hide');
-                $('#btn-text').addClass('active');
-                $('#btn-url').removeClass('active');
-                $('#btn-file').removeClass('active');
-
-            });
-            $("#btn-url").click(function(){
-                if (check_collapsing()) {
-                    return;
-                }
-                $("#form-text").collapse('hide');
-                $("#form-url").collapse('show');
-                $("#form-file").collapse('hide');
-                $('#btn-text').removeClass('active');
-                $('#btn-url').addClass('active');
-                $('#btn-file').removeClass('active');
-            });
-            $("#btn-file").click(function(){
-                if (check_collapsing()) {
-                    return;
-                }
-                $("#form-text").collapse('hide');
-                $("#form-url").collapse('hide');
-                $("#form-file").collapse('show');
-                $('#btn-text').removeClass('active');
-                $('#btn-url').removeClass('active');
-                $('#btn-file').addClass('active');
-            });
-
-            $("#submit-paste").click(function() {
-                var cont, passwd, format;
-                
-                if ($('#btn-url').hasClass('active')) {
-                    cont = $("#form-url input")[0].value;
-                    passwd = $("#password")[0].value;
-                    format = 'url';
-                    
-                    if (!cont) {
-                        alert('No URL entered');
+                $("#btn-text").click(function(){
+                    if (check_collapsing()) {
                         return;
                     }
-                } else if ($('#btn-text').hasClass('active')) {
-                    cont = $("#form-text textarea")[0].value;
-                    passwd = $("#password")[0].value;
-                    format = 'text';
-                    
-                    if (!cont) {
-                        alert('No text entered');
+                    $("#form-text").collapse('show');
+                    $("#form-url").collapse('hide');
+                    $("#form-file").collapse('hide');
+                    $('#btn-text').addClass('active');
+                    $('#btn-url').removeClass('active');
+                    $('#btn-file').removeClass('active');
+
+                });
+                $("#btn-url").click(function(){
+                    if (check_collapsing()) {
                         return;
                     }
-                } else if ($('#btn-file').hasClass('active')) {
-                    alert('File has not implemented yet');
-                    return;
-                }
-                
-                $.ajax({
-                    type: "POST",
-                    url: "/api/newPaste",
-                    data: {
+                    $("#form-text").collapse('hide');
+                    $("#form-url").collapse('show');
+                    $("#form-file").collapse('hide');
+                    $('#btn-text').removeClass('active');
+                    $('#btn-url').addClass('active');
+                    $('#btn-file').removeClass('active');
+                });
+                $("#btn-file").click(function(){
+                    if (check_collapsing()) {
+                        return;
+                    }
+                    $("#form-text").collapse('hide');
+                    $("#form-url").collapse('hide');
+                    $("#form-file").collapse('show');
+                    $('#btn-text').removeClass('active');
+                    $('#btn-url').removeClass('active');
+                    $('#btn-file').addClass('active');
+                });
+
+                $("#submit-paste").click(function() {
+                    var cont, passwd, format;
+                    
+                    if ($('#btn-url').hasClass('active')) {
+                        cont = $("#form-url input")[0].value;
+                        passwd = $("#password")[0].value;
+                        format = 'url';
+                        
+                        if (!cont) {
+                            alert('No URL entered');
+                            return;
+                        }
+                    } else if ($('#btn-text').hasClass('active')) {
+                        cont = $("#form-text textarea")[0].value;
+                        passwd = $("#password")[0].value;
+                        format = 'text';
+                        
+                        if (!cont) {
+                            alert('No text entered');
+                            return;
+                        }
+                    } else if ($('#btn-file').hasClass('active')) {
+                        alert('File has not implemented yet');
+                        return;
+                    }
+                    
+                    Meow.post('/api/newPaste', {
                         'content': cont,
                         'password': passwd,
                         'format': format
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        if (data['success']) {
+                    }, function (suc, dat) {
+                        if (suc) {
                             $("#form-url input")[0].value = ''
                             $("#result").collapse('show');
-                            $("#paste-result")[0].value = data['html_url'];``
-                            $("#result a")[0].href = data['html_url'];``
-                            console.log(data['paste']['content']);
+                            $("#paste-result")[0].value = dat['html_url'];
+                            $("#result a")[0].href = dat['html_url'];
+                            // console.log(data['paste']['content']);
+                        } else {
+                            util.emsg(dat);
                         }
-                    }
-                });
-            })
+                    });
+                })
+            });
         });
     </script>
 

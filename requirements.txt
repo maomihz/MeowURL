@@ -19,3 +19,4 @@ SQLAlchemy==1.1.13
 webencodings==0.5.1
 Werkzeug==0.12.2
 Flask-WTF==0.14.2
+geetest==3.2.1

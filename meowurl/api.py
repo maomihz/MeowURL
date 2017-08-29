@@ -4,13 +4,35 @@ from flask import jsonify, request, g
 from meowurl.dbmodels import Paste
 from meowurl.extra import conv_id_str
 
+import meowurl.captcha as captcha
+import meowurl.traffic as traffic
+
+import json
+
+# success response
+def rsuc(dat, *other):
+    return (
+        jsonify({ "suc": 1, "res": dat }), *other,
+        { 'Content-Type': 'application/json' }
+    )
+    
+# failed response
+def rerr(dat, *other):
+    return (
+        jsonify({ "suc": 0, "res": dat }), *other,
+        { 'Content-Type': 'application/json' },
+    )
+    
+# need captcha
+def rcap(*other):
+    return (
+        jsonify({ "suc": 0, "cap": captcha.reg() }), *other,
+        { 'Content-Type': 'application/json' },
+    )
 
 @app.route('/api')
 def api_index():
-    return jsonify({
-        'success': False,
-        'error': 'Please supply a method',
-    }), 400, {'Content-Type': 'application/json'}
+    return rerr('Please supply a method', 400)
 
 
 @app.route('/api/recent')
@@ -19,16 +41,18 @@ def api_recent_pastes():
         limit = int(request.args.get('limit', 12))
         offset = int(request.args.get('offset', 0))
     except:
-        return jsonify({'success': False,
-                        'error': 'Invalid Parameter'
-                        }), 400, {'Content-Type': 'application/json'}
-    return jsonify({'success': True,
-                    'result': [p.as_dict() for p in Paste.get_all(limit, offset)]
-                    }), {'Content-Type': 'application/json'}
+        return rerr('Invalid Parameter', 400)
 
-
-@app.route('/api/newPaste', methods=['POST'])
-def new_url():
+    return rsuc([ p.as_dict() for p in Paste.get_all(limit, offset) ])
+    
+def new_url(need_captcha):
+    capans = request.form.get('capans')
+    
+    # raise Exception(str(capans));
+    
+    if (not capans or not captcha.verify(**json.loads(capans))) and need_captcha:
+        return rcap()
+    
     # Assign content and password from form
     content = request.form.get('content')
     password = request.form.get('password')
@@ -39,17 +63,18 @@ def new_url():
 
     # If no content
     if not content:
-        result['success'] = False
-        result['reason'] = 'No Content'
+        return rerr('No content')
     else:
         # Add a new paste
         try:
             paste = g.user.add_paste(content, password, format=format)
         except AssertionError as e:
-            result['success'] = False
-            result['reason'] = str(e)
+            return rerr(str(e))
         else:
-            result['success'] = True
-            result['paste'] = paste.as_dict()
-            result['html_url'] = request.url_root + conv_id_str(paste.id)
-    return jsonify(result), {'Content-Type': 'application/json'}
+            return rsuc({
+                'paste': paste.as_dict(),
+                'html_url': request.url_root + conv_id_str(paste.id)
+            })
+
+# limit: 7 times in 3 minutes before trigerring the captcha
+app.route('/api/newPaste', methods=['POST'])(traffic.limit(3 * 60, 7, new_url))
