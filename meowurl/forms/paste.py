@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, AnyOf, Length, Regexp
 
 from meowurl import app
 from meowurl.extra import conv_id_str
+from meowurl.dbmodels import Paste
 
 
 class BaseForm(FlaskForm):
@@ -25,14 +26,16 @@ class EditPasteForm(BaseForm):
     rmpass = BooleanField('rmpass')
 
     def __init__(self):
+        super().__init__()
         self.paste = None
 
     def validate(self):
         if not super().validate():
             return False
 
-        self.paste = Paste.get_paste(conv_id_str(self.id))
+        paste = Paste.get_paste(conv_id_str(self.id.data))
         if not paste:
             self.id.errors.append('Paste does not exist!')
             return False
+        self.paste = paste
         return True

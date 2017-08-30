@@ -163,16 +163,16 @@ def shorten():
     })
 
 
-@app.route('/edit.do/<id>', methods=['GET', 'POST'])
-def edit(id):
+@app.route('/edit.do', methods=['GET', 'POST'])
+def edit():
     form = EditPasteForm()
     if form.validate_on_submit():
         if not get_owned(form.paste.id):
-            return rerr({error: "You do not own the paste!"})
-            form.paste.content = content
-            form.paste.password = None if rmpass else password
-            db.session.commit()
-            return rsuc()
+            return rerr({'error': "You do not own the paste!"})
+        form.paste.content = form.content.data
+        form.paste.password = None if form.rmpass.data else form.password.data
+        db.session.commit()
+        return rsuc()
     return 'b'
 
 

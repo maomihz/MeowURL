@@ -2,7 +2,7 @@
 {% block title %}{{ super() }} - {{ paste.id }}{% endblock %}
 {% block head %}
 {{ super() }}
-    <script src="/static/js/clipboard.min.js"></script>
+    <script src="/static/js/clipboard.js"></script>
 {% endblock %}
 {% block body %}
 <div class="panel panel-default">
@@ -24,32 +24,82 @@
         {% endif %}
 
         <div class="btn-group pull-right">
-            <a class="btn btn-default{% if not get_owned(paste.id) %} disabled{% endif %}" href="{{url_for('edit', id=conv_id_str(paste.id))}}">
+            <a id="edit-button" class="btn btn-default{% if not get_owned(paste.id) %} disabled{% endif %}" href="{{url_for('edit', id=conv_id_str(paste.id))}}">
                 <span class="fa fa-pencil"></span>
             </a>
         </div>
     </div>
     <div class="panel-body">
-        {% if format == "need auth" %}
-        <form action="" method='GET' accept-charset="utf-8">
+        <div id="display-panel">
+            {% if format == "need auth" %}
+            <form action="" method='GET' accept-charset="utf-8">
 
+                <div class="form-group">
+                    <label for="password">{{'Input Password to Unlock: '}}</label>
+                    <input id="password" class="form-control" name="auth" type="password">
+                </div>
+                <input class="btn btn-default" type="submit" value="{{'Unlock'}}">
+            </form>
+            {% elif format == "plain" %}
+                {% include 'partials/plain.html' %}
+
+            {% elif format == "markdown" %}
+                {{ paste.content | decode | markdown | bleach | safe }}
+            {% else %}
+                {{'Content not found'}}
+            {% endif %}
+        </div>
+        {% if format in ['plain', 'markdown'] %}
+        <div id="edit-panel" class="hidden">
             <div class="form-group">
-                <label for="password">{{'Input Password to Unlock: '}}</label>
-                <input id="password" class="form-control" name="auth" type="password">
+                <textarea class="form-control" name="content" rows=8>{{ paste.content | decode }}</textarea>
             </div>
-            <input class="btn btn-default" type="submit" value="{{'Unlock'}}">
-        </form>
-        {% elif format == "plain" %}
-            {% include 'partials/plain.html' %}
-
-        {% elif format == "markdown" %}
-            {{ paste.content | decode | markdown | bleach | safe }}
-        {% else %}
-            {{'Content not found'}}
+            <div class"form-group">
+                <label for="cpassword">{{'Change Password'}}</label>
+                <input id="cpassword" class="form-control" name="password" type="password">
+            </div>
+            <div class="checkbox">
+                <label><input type="checkbox" name="rmpass" value="1"> {{"Remove password"}}</label>
+            </div>
+            <button class="btn btn-default" type="submit">Submit</button>
+        </div>
         {% endif %}
     </div>
     <div class="panel-footer">
         Posted by {{ paste.owner.name }} at {{ paste.date.strftime('%F %T') }} UTC
     </div>
 </div>
+
+<script>
+    $('#edit-button').click(function() {
+        $('#display-panel').toggleClass('hidden');
+        $('#edit-panel').toggleClass('hidden');
+        $(this).toggleClass('active');
+        return false;
+    });
+
+    $('#edit-panel button').click(function() {
+        cont = $('#edit-panel textarea').val();
+        pass = $('#cpassword').val();
+        rmpass = $('#edit-panel checkbox').is(':checked');
+
+        if (!cont){
+            alert('No content!');
+        }
+
+        Meow.post("{{url_for('edit')}}", {
+            'content': cont,
+            'password': pass,
+            'rmpass': rmpass,
+            'id': '{{conv_id_str(paste.id)}}'
+        }, function(suc, dat) {
+            console.log(dat);
+            if (suc) {
+                location.reload();
+            } else {
+                alert('Error');
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -10,24 +10,24 @@ import meowurl.traffic as traffic
 import json
 
 # success response
-def rsuc(dat, *other):
+def rsuc(dat={}, *other):
     return (
-        jsonify({ "suc": 1, "res": dat }), *other,
-        { 'Content-Type': 'application/json' }
+        jsonify({"suc": 1, "res": dat}), *other,
+        {'Content-Type': 'application/json'}
     )
-    
+
 # failed response
-def rerr(dat, *other):
+def rerr(dat={}, *other):
     return (
-        jsonify({ "suc": 0, "res": dat }), *other,
-        { 'Content-Type': 'application/json' },
+        jsonify({"suc": 0, "res": dat}), *other,
+        {'Content-Type': 'application/json'},
     )
-    
+
 # need captcha
 def rcap(*other):
     return (
-        jsonify({ "suc": 0, "cap": captcha.reg() }), *other,
-        { 'Content-Type': 'application/json' },
+        jsonify({"suc": 0, "cap": captcha.reg()}), *other,
+        {'Content-Type': 'application/json'},
     )
 
 @app.route('/api')
@@ -44,20 +44,20 @@ def api_recent_pastes():
         return rerr('Invalid Parameter', 400)
 
     return rsuc([ p.as_dict() for p in Paste.get_all(limit, offset) ])
-    
+
 def new_url(need_captcha):
     capans = request.form.get('capans')
-    
+
     # raise Exception(str(capans));
-    
+
     if (not capans or not captcha.verify(**json.loads(capans))) and need_captcha:
         return rcap()
-    
+
     # Assign content and password from form
     content = request.form.get('content')
     password = request.form.get('password')
     format = request.form.get('format')
-    
+
     paste = None
     result = {}
 
