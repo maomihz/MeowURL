@@ -6,11 +6,14 @@ import contextlib
 
 from meowurl import app, memcache, db
 from meowurl.extra import conv_id_str, request_wants_json
+from meowurl.api import rsuc, rerr
 from meowurl.dbmodels import Paste, User, InviteCode
 
 from meowurl.forms import LoginForm, RegisterForm, UserSettingsForm
+from meowurl.forms import PasteForm, EditPasteForm
 
 db.create_all()
+
 
 @app.template_global('get_authorized')
 def get_authorized(id):
@@ -55,6 +58,7 @@ def check_session():
 def set_session(response):
     ''' After request, set the session ID as cookie '''
     response.set_cookie('session_id', g.session_id)
+    print(response.data)
     return response
 
 
@@ -68,10 +72,7 @@ def page_not_found(error):
 @app.route('/')
 def index():
     ''' Index page, just render the index.html '''
-    return render_template(
-        'index.html',
-        recent_pastes=Paste.get_all(app.config['INDEX_PASTE_NUMBER'])
-    )
+    return render_template('index.html')
 
 
 @app.route('/login.do', methods=['GET', 'POST'])
@@ -81,11 +82,13 @@ def login():
     if form.validate_on_submit():
         memcache.set_login(form.username.data)
         if request_wants_json():
-            return jsonify(success=True)
+            return rsuc()
         return redirect(url_for('index'))
 
     if request_wants_json():
-        return jsonify(success=False, error=[a for b in form.errors.values() for a in b])
+        return rerr({
+            error: [a for b in form.errors.values() for a in b]
+        })
     memcache.flash_form_errors(form)
     return render_template('login.html', form=form)
 
@@ -124,22 +127,7 @@ def register():
 @app.route('/logout.do')
 def logout():
     memcache.set_logout()
-    return redirect(url_for('index'))
-
-
-@app.route('/account.do')
-def account():
-    return g.user.username
-
-
-@app.route('/u/<username>')
-def view_user(username):
-    user = User.query.get(username.lower())
-    if not user:
-        return render_template('error.html', content='No such user'), 404
-    else:
-        recent_pastes = user.pastes.order_by(-Paste.id).all()
-        return render_template('user_pastes.html', user=user, recent_pastes=recent_pastes)
+    return rsuc()
 
 
 @app.route('/settings.do', methods=['GET', 'POST'])
@@ -151,70 +139,52 @@ def user_settings():
     if form.validate_on_submit():
         codes = g.user.generate_code(form.gencode.data)
         if request_wants_json():
-            return jsonify(success=True, codes=[c.code for c in codes],
-                           left=g.user.invites_left)
+            return rsuc({
+                codes: [c.code for c in codes],
+                left: g.user.invites_left})
         return redirect(request.base_url)
 
     if request_wants_json():
-        return jsonify(success=False, error=[a for b in form.errors.values() for a in b])
+        return rerr({
+            error: [a for b in form.errors.values() for a in b]
+        })
     return render_template('user_settings.html', form=form)
 
 
 @app.route('/short.do', methods=['POST'])
 def shorten():
-    # Assign content and password from form
-    content = request.form.get('content')
-    password = request.form.get('password')
-    paste = None
-
-    # If no content
-    if not content:
-        error = 'No Content!'
-    else:
-        # Add a new paste
-        try:
-            paste = g.user.add_paste(content, password)
-        except AssertionError as e:
-            error = str(e)
-        else:
-            return render_template('submit.html', paste=paste)
-    return render_template('error.html', content=error)
+    form = PasteForm()
+    if form.validate_on_submit():
+        paste = g.user.add_paste(form.content.data, form.password.data)
+        return rsuc({
+            'html_url': request.url_root + conv_id_str(paste.id)
+        })
+    return rerr({
+        'error': [a for b in form.errors.values() for a in b]
+    })
 
 
 @app.route('/edit.do/<id>', methods=['GET', 'POST'])
 def edit(id):
-    # Try convert
-    paste = Paste.get_paste(conv_id_str(id))
-    # If the paste does not exist
-    if not paste:
-        abort(404)
-    if not get_owned(paste.id):
-        return render_template('error.html', content='You do not own the paste!')
-    if request.method == 'GET':
-        return render_template('edit.html', paste=paste)
+    form = EditPasteForm()
+    if form.validate_on_submit():
+        if not get_owned(form.paste.id):
+            return rerr({error: "You do not own the paste!"})
+            form.paste.content = content
+            form.paste.password = None if rmpass else password
+            db.session.commit()
+            return rsuc()
+    return 'b'
 
-    # Else POST
-    elif request.method == 'POST':
-        content = request.form.get('content')
-        password = request.form.get('password')
-        rmpass = request.form.get('rmpass')
 
-        # If no content
-        if not content:
-            error = 'No Content!'
-        else:
-            try:
-                paste.content = content
-                if rmpass:
-                    paste.password = None
-                elif password:
-                    paste.password = password
-                db.session.commit()
-            except AssertionError as e:
-                error = str(e)
-            else:
-                return redirect(url_for('view_paste', id=id))
-        return render_template('error.html', error)
+@app.route('/u/<username>')
+def view_user(username):
+    user = User.query.get(username.lower())
+    if not user:
+        return render_template('error.html', content='No such user'), 404
+    recent_pastes = user.pastes.order_by(-Paste.id).all()
+    return render_template('user_pastes.html', user=user, recent_pastes=recent_pastes)
+
 
 @app.route('/<id>', defaults={'format': 'redir'})
 @app.route('/<id>/<format>')
@@ -228,7 +198,7 @@ def view_paste(id, format):
     # Request 100 recent paste list
     if paste_id <= 0:
         recent_pastes = Paste.get_all(app.config['MORE_PASTE_NUMBER'])
-        return render_template('all.html', pastes = recent_pastes)
+        return render_template('all.html', pastes=recent_pastes)
 
     else:
         paste = Paste.get_paste(conv_id_str(id))

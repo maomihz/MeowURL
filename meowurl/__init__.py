@@ -13,6 +13,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.config.from_object(Config)
 app.config.from_pyfile('config.cfg')
 
+# Enable CSRF Protection
 CSRFProtect(app)
 
 # Setup jinja environmenta
@@ -42,6 +43,14 @@ memcache = Client(
                'ketama': True}
 )
 
+from flask.json import JSONEncoder
+
+class AsDictEncoder(JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, 'as_dict'):
+            return obj.as_dict()
+        return super().default(obj)
+app.json_encoder = AsDictEncoder
 
 # Register Cli interface
 import meowurl.cli

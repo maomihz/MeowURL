@@ -8,8 +8,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from meowurl import db, app
 from meowurl.extra import conv_id_str, URL_REGEX
 
-ALLOWED_FORMATS = ('url', 'text')
-
 class Paste(db.Model):
     __tablename__ = app.config['DB_PREFIX'] + 'paste'
 
@@ -41,23 +39,6 @@ class Paste(db.Model):
     def content(self, content):
         self._content = codecs.encode(content, 'utf-8')
         self.content_hash = sha256(self._content).digest()
-        # self.is_url = True if URL_REGEX.match(content) else False
-
-    @db.validates('content')
-    def validate_content(self, key, content):
-        content_len = len(content)
-        if content_len <= 0:
-            raise AssertionError('Empty Content!')
-        if content_len > app.config['MAX_CONTENT_LENGTH']:
-            raise AssertionError('Content Too Long!')
-        return content
-        
-    @db.validates('format')
-    def validate_format(self, key, format):
-        if not format in ALLOWED_FORMATS:
-            raise AssertionError('Illegal format')
-            
-        return format
 
     @hybrid_property
     def password(self):
@@ -111,8 +92,6 @@ class Paste(db.Model):
     @classmethod
     def edit_paste(cls, id, content, password):
         paste = cls.query.get(id)
-        if not paste:
-            return None
         paste.content = content
         paste.password = password
 

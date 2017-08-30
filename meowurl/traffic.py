@@ -7,11 +7,11 @@ import time
 def limit(interval, max_request, callback):
     last_req = None
     count = 0
-    
+
     def handler():
         nonlocal last_req
         nonlocal count
-        
+
         count += 1
         now = time.time()
         exceed = False
@@ -24,7 +24,7 @@ def limit(interval, max_request, callback):
         else: # interval exceeded
             last_req = now
             count = 0
-        
+
         return callback(exceed)
-        
+
     return handler

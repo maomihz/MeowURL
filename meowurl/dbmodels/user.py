@@ -1,11 +1,18 @@
-from meowurl import app, db
+import re
+from datetime import datetime
+
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.ext.hybrid import hybrid_property
-from datetime import datetime
+
+from meowurl import app, db
 from .paste import Paste
 from .invitecode import InviteCode
 
-import re
+class Group:
+    ANONYMOUS = -1
+    ADMIN = 0
+    USER = 1
+    MODERATOR = 2
 
 class User(db.Model):
     __tablename__ = app.config['DB_PREFIX'] + 'user'
@@ -18,8 +25,11 @@ class User(db.Model):
     _password = db.Column('password', db.String(128), nullable=True)
     email = db.Column(db.String(64), unique=True, nullable=True)
 
-    # Anonymous user is users without username and email
-    anonymous = db.Column(db.Boolean())
+    # Anonymous user: -1
+    # Ordinary user: 1
+    # Moderator: 2
+    # Super admin: 0
+    group = db.Column(db.Integer())
 
     # Registration date of the user
     regdate = db.Column(db.DateTime())
@@ -29,12 +39,13 @@ class User(db.Model):
     invites_left = db.Column(db.Integer())
 
     def __init__(self, name, email, password, anonymous=False):
-        self.anonymous = anonymous
+        self.group = Group.ANONYMOUS if anonymous else Group.USER
+
         self.name = name
         self.password = password
         self.email = email
 
-        last_user = User.query.filter(User.anonymous.isnot(True)).order_by(-User.uid).first()
+        last_user = User.query.filter(User.group != Group.ANONYMOUS).order_by(-User.uid).first()
         self.uid = 1 if not last_user else last_user.uid + 1
 
         self.regdate = datetime.utcnow()
@@ -53,24 +64,11 @@ class User(db.Model):
 
     @db.validates('username')
     def validate_username(self, key, username):
-        username_regex = re.compile(r'^[a-z0-9][a-z0-9\._]+?$')
         anonymous_regex = re.compile(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
-        
-        if self.anonymous:
-            if not anonymous_regex.match(username):
-                raise AssertionError('Illegal anonymous user!')
-        else:
-            if not username_regex.match(username):
-                raise AssertionError('Username can only contain letters, underscore and dot. ')
-            if username in app.config['RESERVED_USERNAMES']:
-                raise AssertionError('You cannot register this reserved username!')
+        if self.group == Group.ANONYMOUS and not anonymous_regex.match(username):
+            raise AssertionError('Illegal anonymous user!')
 
         user = User.query.get(username)
-        
-        # print(user)
-        if user:
-            raise AssertionError('The username "%s" already exist!' % username)
-        
         return username
 
     @hybrid_property
@@ -82,10 +80,6 @@ class User(db.Model):
         if not self.anonymous:
             password_len = len(password)
             self._password = generate_password_hash(password, method='pbkdf2:sha256:1200')
-
-    @db.validates('email')
-    def check_email(self, key, email):
-        return email
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -134,3 +128,7 @@ class User(db.Model):
     def get_user(cls, name):
         user = cls.query.get(name.lower())
         return user
+
+    @property
+    def anonymous(self):
+        return self.group == Group.ANONYMOUS

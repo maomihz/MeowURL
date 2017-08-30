@@ -115,7 +115,7 @@
     </div>
     <script>
         "use strict";
-        
+
         require([ "mod/util" ], function (util) {
             $(document).ready(function() {
                 var check_collapsing = function() {
@@ -160,12 +160,12 @@
 
                 $("#submit-paste").click(function() {
                     var cont, passwd, format;
-                    
+
                     if ($('#btn-url').hasClass('active')) {
                         cont = $("#form-url input")[0].value;
                         passwd = $("#password")[0].value;
                         format = 'url';
-                        
+
                         if (!cont) {
                             alert('No URL entered');
                             return;
@@ -174,7 +174,7 @@
                         cont = $("#form-text textarea")[0].value;
                         passwd = $("#password")[0].value;
                         format = 'text';
-                        
+
                         if (!cont) {
                             alert('No text entered');
                             return;
@@ -183,8 +183,8 @@
                         alert('File has not implemented yet');
                         return;
                     }
-                    
-                    Meow.post('/api/newPaste', {
+
+                    Meow.post("{{url_for('shorten')}}", {
                         'content': cont,
                         'password': passwd,
                         'format': format
@@ -194,7 +194,7 @@
                             $("#result").collapse('show');
                             $("#paste-result")[0].value = dat['html_url'];
                             $("#result a")[0].href = dat['html_url'];
-                            // console.log(data['paste']['content']);
+                            console.log(dat);
                         } else {
                             util.emsg(dat);
                         }

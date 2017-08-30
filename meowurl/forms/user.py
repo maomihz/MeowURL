@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email, Length, Regexp
 
 from meowurl.dbmodels import User, InviteCode
 from meowurl import app
@@ -35,9 +35,11 @@ class LoginForm(FlaskForm):
 
 class RegisterForm(FlaskForm):
     name = StringField('name', validators=[
-                       DataRequired('Username is required!')])
-    email = StringField('email', validators=[DataRequired(
-        'Email is required!'), Email('Invalid email format!')])
+                       DataRequired(message='Username is required!'),
+                       Regexp(r'^[a-zA-Z0-9][a-zA-Z0-9\._]+?$', message='Username can only contain letters, underscore and dot. ')])
+    email = StringField('email', validators=[
+        DataRequired('Email is required!'),
+        Email('Invalid email format!')])
     password = StringField('password', validators=[
                            DataRequired('Password is required!'),
                            Length(min=app.config['MIN_PASSWORD_LENGTH'],
@@ -56,6 +58,9 @@ class RegisterForm(FlaskForm):
         if User.get_user(self.name.data):
             self.name.errors.append('Username Already Registered!')
             return False
+
+        if self.name.data.lower() in app.config['RESERVED_USERNAMES']:
+            self.name.errors.append('You cannot register this name!')
 
         # Check for email existance
         email_user = User.query.filter(User.email == self.email.data).first()

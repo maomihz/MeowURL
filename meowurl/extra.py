@@ -1,7 +1,9 @@
-from meowurl import app
-from flask import request
 import codecs
 import re
+
+from flask import request, jsonify
+
+from meowurl import app
 
 URL_REGEX = re.compile(
     '(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})')
@@ -12,14 +14,14 @@ def conv_id_str(id):
     # Define the charset to use
     charset = app.config['URL_CHARSET']
     charset_len = len(charset)
-    
+
     # String to internal ID
     if type(id) is str:
         return sum(
             charset.index(char) * (charset_len ** i)
             for i, char in enumerate(reversed(id))
         )
-    
+
     # Internal ID to string
     elif type(id) is int:
         result = []
@@ -46,3 +48,13 @@ def request_wants_json():
     return best == 'application/json' and \
         request.accept_mimetypes[best] > \
         request.accept_mimetypes['text/html']
+
+
+def rejson(success, dat={}, *others):
+    return (jsonify({'suc': success, 'dat': dat}), *others)
+
+def rsuc(*args):
+    return rejson(1, *args)
+
+def rerr (*args):
+    return rejson(0, *args)

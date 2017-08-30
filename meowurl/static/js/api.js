@@ -2,9 +2,9 @@
 
 window.Meow = (function ($) {
     var mod = {};
-    
+
     var captcha_handler = null;
-    
+
     // captcha = function (cap_data, callback(suc, [msg])) { }
     mod.captcha = function (arg) {
         if (arg === undefined) {
@@ -13,7 +13,7 @@ window.Meow = (function ($) {
             captcha_handler = arg;
         }
     };
-    
+
     function req(method) {
         return function (url, arg, cb) {
             $.ajax({
@@ -21,7 +21,7 @@ window.Meow = (function ($) {
                 url: url,
                 data: arg,
                 dataType: "json",
-                
+
                 success: function (dat) {
                     // console.log(dat);
                     if (!dat.suc && dat.cap) {
@@ -35,17 +35,17 @@ window.Meow = (function ($) {
                         });
                     } else cb(dat.suc, dat.res);
                 },
-                
+
                 error: function () {
                     cb(false, "network error");
                 }
             });
         };
     };
-    
+
     mod.get = req("GET");
     mod.post = req("POST");
-    
+
     mod.css = function (path) {
         $("<link>")
 			.attr({
@@ -54,6 +54,6 @@ window.Meow = (function ($) {
 			})
 			.appendTo("head");
     };
-    
+
     return mod;
 })(jQuery);
