@@ -58,7 +58,6 @@ def check_session():
 def set_session(response):
     ''' After request, set the session ID as cookie '''
     response.set_cookie('session_id', g.session_id)
-    print(response.data)
     return response
 
 
@@ -140,13 +139,13 @@ def user_settings():
         codes = g.user.generate_code(form.gencode.data)
         if request_wants_json():
             return rsuc({
-                codes: [c.code for c in codes],
-                left: g.user.invites_left})
+                'codes': [c.code for c in codes],
+                'left': g.user.invites_left})
         return redirect(request.base_url)
 
     if request_wants_json():
         return rerr({
-            error: [a for b in form.errors.values() for a in b]
+            'error': [a for b in form.errors.values() for a in b]
         })
     return render_template('user_settings.html', form=form)
 

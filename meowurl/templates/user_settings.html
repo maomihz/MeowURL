@@ -122,30 +122,25 @@ refresh_table();
 </div>
 <script>
     $('#genCode .btn').click(function(e) {
-        $.ajax({
-            url: "{{url_for('user_settings')}}",
-            type: 'post',
-            dataType: 'json',
-            data: {
+        Meow.post("{{url_for('user_settings')}}", {
                 'gencode': $(this).val()
-            },
-            success: function(data) {
-                if (data['success']) {
-                    $.each(data['codes'], function(i, val) {
+            }, function(suc, dat) {
+                if (suc) {
+                    $.each(dat['codes'], function(i, val) {
                         $('#inviteCodeTable').prepend('<tr><td class="invitecode">' + val + '</td></tr>');
                     });
-                    $('#invite-panel-title span').html(data['left']);
+                    $('#invite-panel-title span').html(dat['left']);
 
                     refresh_table();
                 } else {
                     $('#invite-error .modal-body').html('');
-                    $.each(data['error'], function(i, val) {
+                    $.each(dat['error'], function(i, val) {
                         $('#invite-error .modal-body').append('<div class="alert alert-danger">' + val + '</div>');
                     });
                     $('#invite-error').modal();
                 }
             }
-        });
+        );
         return false;
     });
 
