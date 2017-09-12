@@ -184,7 +184,7 @@
                         return;
                     }
 
-                    Meow.post("{{url_for('shorten')}}", {
+                    Meow.post('/api/newPaste', {
                         'content': cont,
                         'password': passwd,
                         'format': format
@@ -194,7 +194,7 @@
                             $("#result").collapse('show');
                             $("#paste-result")[0].value = dat['html_url'];
                             $("#result a")[0].href = dat['html_url'];
-                            console.log(dat);
+                            // console.log(data['paste']['content']);
                         } else {
                             util.emsg(dat);
                         }

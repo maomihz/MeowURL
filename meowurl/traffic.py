@@ -15,7 +15,7 @@ def limit(interval, max_request, callback):
         count += 1
         now = time.time()
         exceed = False
-        
+
         if last_req is None:
             last_req = now
         elif now - last_req < interval:

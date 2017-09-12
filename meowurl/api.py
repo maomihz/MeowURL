@@ -10,24 +10,24 @@ import meowurl.traffic as traffic
 import json
 
 # success response
-def rsuc(dat={}, *other):
+def rsuc(dat, *other):
     return (
-        jsonify({"suc": 1, "res": dat}), *other,
-        {'Content-Type': 'application/json'}
+        jsonify({ "suc": 1, "res": dat }), *other,
+        { 'Content-Type': 'application/json' }
     )
 
 # failed response
-def rerr(dat={}, *other):
+def rerr(dat, *other):
     return (
-        jsonify({"suc": 0, "res": dat}), *other,
-        {'Content-Type': 'application/json'},
+        jsonify({ "suc": 0, "res": dat }), *other,
+        { 'Content-Type': 'application/json' },
     )
 
 # need captcha
 def rcap(*other):
     return (
-        jsonify({"suc": 0, "cap": captcha.reg()}), *other,
-        {'Content-Type': 'application/json'},
+        jsonify({ "suc": 0, "cap": captcha.reg() }), *other,
+        { 'Content-Type': 'application/json' },
     )
 
 @app.route('/api')

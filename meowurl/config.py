@@ -41,7 +41,6 @@ class Config:
     CAPTCHA_GEETEST = ("0c6632c90e65639219455f5f97bd6a22", # id
                        "f0d9558b276a038c5ccc4a6a17b315d9") # key
 
-
 class DebugConfig(Config):
     DEBUG = True
     TEMPLATE_AUTO_RELOAD = True
