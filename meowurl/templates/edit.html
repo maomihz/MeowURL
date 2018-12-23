@@ -16,6 +16,7 @@
             <div class="checkbox">
                 <label><input type="checkbox" name="rmpass" value="1"> {{"Remove password"}}</label>
             </div>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button class="btn btn-default" type="submit">Submit</button>
         </form>
     </div>

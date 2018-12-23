@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
-
 from mistune import markdown
-import bleach
+from bleach import linkify, clean
 from meowurl.whitelist import tags, attrs
 
 from meowurl.config import Config
@@ -15,21 +15,24 @@ app.config.from_pyfile('config.cfg')
 
 CSRFProtect(app)
 
-# Setup jinja environmenta
+# Setup jinja environment
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
-app.jinja_env.filters.update({
-    'bleach': lambda md_html: bleach.linkify(
-        bleach.clean(md_html, tags, attrs)).replace('<table>','<table class="table table-striped">'),
-})
+app.jinja_env.filters['markdown'] = markdown
 
-@app.template_filter('markdown')
-def filter_markdown(*args, **kwargs):
-    md = markdown(*args, **kwargs)
-    return md
+@app.template_filter('bleach')
+def bleach_filter(html):
+    '''The bleach filter is a wrapper of bleach's clean and linkify.
+    It also adds some custom functions when processing the markdown HTML.
+    '''
+    html = clean(html, tags, attrs)
+    html = linkify(html)
+    return html.replace('<table>','<table class="table table-striped">')
+
 
 # Setup database environment
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 from .cache import Client
 # Set up Memcache cache environment

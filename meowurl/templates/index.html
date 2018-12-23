@@ -29,7 +29,7 @@
                 <div id="form-url" class="collapse in">
                     <div class="form-group">
                         <label for="content">{{'URL'}}:</label>
-                        <input type="text" class="form-control" name="content">
+                        <input type="text" class="form-control paste-content" name="content">
                     </div>
                 </div>
 
@@ -38,7 +38,7 @@
                 <div id="form-text" class="collapse">
                     <div class="form-group">
                         <label for="content">{{'Content'}}:</label>
-                        <textarea class="form-control" name="content" rows="8"></textarea>
+                        <textarea class="form-control paste-content" name="content" rows="8"></textarea>
                     </div>
                 </div>
 
@@ -46,19 +46,18 @@
                 <div id="form-file" class="collapse">
                     <div class="form-group">
                         <label for="fname">{{'File Name'}}:</label>
-                        <input type="text" class="form-control" name="content">
+                        <input type="text" class="form-control paste-content" name="content">
                     </div>
                     <div class="form-group">
                         <label for="fhosts">{{'File Hosts'}}:</label>
                         <button class="btn btn-default" type="button" name="content">Add Host</button>
                     </div>
-
                 </div>
 
-                <div class="collapse in" id="advanced">
+                <div class="collapse" id="advanced">
                     <div class="form-group">
                         <label for="password">{{'Password'}}:</label>
-                        <input class="form-control" id="password" name="password" type="password"></input>
+                        <input class="form-control" id="password" name="password" type="password">
                     </div>
                 </div>
 
@@ -115,96 +114,87 @@
     </div>
     <script>
     $(document).ready(function() {
+        var input_types = ["text", "url", "file"];
         var check_collapsing = function() {
-            return $('#form-text').hasClass('collapsing') ||
-            $('#form-url').hasClass('collapsing') ||
-            $('#form-url').hasClass('collapsing')
+            for (var i = 0; i < input_types; i++) {
+                if ($("#form-" + input_types[i]).hasClass('collapsing')) {
+                    return true;
+                }
+            }
+            return false;
         }
-        $("#btn-text").click(function(){
-            if (check_collapsing()) {
-                return;
-            }
-            $("#form-text").collapse('show');
-            $("#form-url").collapse('hide');
-            $("#form-file").collapse('hide');
-            $('#btn-text').addClass('active');
-            $('#btn-url').removeClass('active');
-            $('#btn-file').removeClass('active');
 
+        input_types.forEach(function(e) {
+            $("#btn-" + e).click(function() {
+                if (check_collapsing()) {
+                    return;
+                }
+                if ($(this).hasClass('active')) {
+                    $("#advanced").collapse('toggle');
+                    return;
+                }
+                input_types.forEach(function(e2) {
+                    if (e == e2) {
+                        $("#form-" + e2).collapse('show');
+                        $("#btn-" + e2).addClass('active');
+                    } else {
+                        $("#form-" + e2).collapse('hide');
+                        $("#btn-" + e2).removeClass('active');
+                    }
+                })
+            })
         });
-        $("#btn-url").click(function(){
-            if (check_collapsing()) {
-                return;
-            }
-            $("#form-text").collapse('hide');
-            $("#form-url").collapse('show');
-            $("#form-file").collapse('hide');
-            $('#btn-text').removeClass('active');
-            $('#btn-url').addClass('active');
-            $('#btn-file').removeClass('active');
-        });
-        $("#btn-file").click(function(){
-            if (check_collapsing()) {
-                return;
-            }
-            $("#form-text").collapse('hide');
-            $("#form-url").collapse('hide');
-            $("#form-file").collapse('show');
-            $('#btn-text').removeClass('active');
-            $('#btn-url').removeClass('active');
-            $('#btn-file').addClass('active');
-        });
+
 
         $("#submit-paste").click(function() {
-            if ($('#btn-url').hasClass('active')) {
-                url = $("#form-url input")[0].value;
-                passwd = $("#password")[0].value;
-                if (url.length <= 0) {
-                    alert('URL');
-                    return;
+            // Check if empty
+            var submit_types = ['url', 'text', 'file'];
+            var submit_type;
+            for (var i = 0; i < submit_types.length; i++) {
+                if ($('#btn-' + submit_types[i]).hasClass('active')) {
+                    submit_type = submit_types[i];
+                    break;
                 }
-                $.ajax({
-                    type: "POST",
-                    url: "/api/newUrl",
-                    data: {'content': url, 'password': passwd},
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        if (data['success']) {
-                            $("#form-url input")[0].value = ''
-                            $("#result").collapse('show');
-                            $("#paste-result")[0].value = data['html_url'];``
-                            $("#result a")[0].href = data['html_url'];``
-                            console.log(data['paste']['content']);
-                        }
-                    }
-                });
-            } else if ($('#btn-text').hasClass('active')) {
-                text = $("#form-text textarea")[0].value;
-                passwd = $("#password")[0].value;
-                if (text.length <= 0) {
-                    alert('Text');
-                    return;
-                }
-                $.ajax({
-                    type: "POST",
-                    url: "/api/newUrl",
-                    data: {'content': text, 'password': passwd},
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        if (data['success']) {
-                            $("#form-url input")[0].value = ''
-                            $("#result").collapse('show');
-                            $("#paste-result")[0].value = data['html_url'];``
-                            $("#result a")[0].href = data['html_url'];``
-                            console.log(data['paste']['content']);
-                        }
-                    }
-                });
-            } else if ($('#btn-file').hasClass('active')) {
-                alert('File has not implemented yet');
             }
+
+            if (submit_type == 'file') {
+                alert("not implemented.");
+                return;
+            }
+
+            content = $('#form-' + submit_type + ' .paste-content')[0].value;
+            passwd = $("#password")[0].value;
+            if (content.length <= 0) {
+                alert('no content.');
+                return;
+            }
+            if (content.length > {{ config.MAX_CONTENT_LENGTH }}) {
+                alert('Content too long.');
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/api/newUrl",
+                data: {'content': content, 'password': passwd},
+                dataType: 'json',
+                success: function(data) {
+                    console.log(data);
+                    if (data['success']) {
+                        $(".paste-content").val('');
+                        $("#result").collapse('show');
+                        $("#paste-result")[0].value = data['html_url'];
+                        $("#result a")[0].href = data['html_url'];
+                        console.log(data['paste']['content']);
+                    } else {
+                        data['reason'].forEach(function (e) {
+                            alert(e);
+                        });
+                    }
+                }
+            })
+
+
         })
     })
     </script>

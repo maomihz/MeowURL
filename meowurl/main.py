@@ -8,7 +8,7 @@ from meowurl import app, memcache, db
 from meowurl.extra import conv_id_str, request_wants_json
 from meowurl.dbmodels import Paste, User, InviteCode
 
-from meowurl.forms import LoginForm, RegisterForm, UserSettingsForm
+from meowurl.forms import LoginForm, RegisterForm, UserSettingsForm, NewPasteForm, EditPasteForm
 
 
 
@@ -54,7 +54,8 @@ def check_session():
 @app.after_request
 def set_session(response):
     ''' After request, set the session ID as cookie '''
-    response.set_cookie('session_id', g.session_id)
+    if hasattr(g, 'session_id'):
+        response.set_cookie('session_id', g.session_id)
     return response
 
 
@@ -144,9 +145,11 @@ def view_user(username):
 
 @app.route('/settings.do', methods=['GET', 'POST'])
 def user_settings():
+    # Anonymous user does not have a settings page
     if g.user.anonymous:
         return redirect(url_for('index'))
 
+    # Currently POSTing this endpoint only generates invite code
     form = UserSettingsForm()
     if form.validate_on_submit():
         codes = g.user.generate_code(form.gencode.data)
@@ -162,23 +165,20 @@ def user_settings():
 
 @app.route('/short.do', methods=['POST'])
 def shorten():
-    # Assign content and password from form
-    content = request.form.get('content')
-    password = request.form.get('password')
+    ''' This Endpoint is JSON only. Old HTML format is depreciated'''
+    form = NewPasteForm()
     paste = None
+    result = {}
 
-    # If no content
-    if not content:
-        error = 'No Content!'
+    if form.validate_on_submit():
+        paste = g.user.add_paste(form.content.data, form.password.data)
+        result['success'] = True
+        result['paste'] = paste.as_dict()
+        result['html_url'] = request.url_root + conv_id_str(paste.id)
     else:
-        # Add a new paste
-        try:
-            paste = g.user.add_paste(content, password)
-        except AssertionError as e:
-            error = str(e)
-        else:
-            return render_template('submit.html', paste=paste)
-    return render_template('error.html', content=error)
+        result['success'] = False
+        result['reason'] = form.errors.values()
+    return jsonify(result)
 
 
 @app.route('/edit.do/<id>', methods=['GET', 'POST'])
@@ -194,27 +194,16 @@ def edit(id):
         return render_template('edit.html', paste=paste)
 
     # Else POST
-    elif request.method == 'POST':
-        content = request.form.get('content')
-        password = request.form.get('password')
-        rmpass = request.form.get('rmpass')
-
-        # If no content
-        if not content:
-            error = 'No Content!'
-        else:
-            try:
-                paste.content = content
-                if rmpass:
-                    paste.password = None
-                elif password:
-                    paste.password = password
-                db.session.commit()
-            except AssertionError as e:
-                error = str(e)
-            else:
-                return redirect(url_for('view_paste', id=id))
-        return render_template('error.html', error)
+    form = EditPasteForm()
+    if form.validate_on_submit():
+        paste.content = form.content.data
+        if form.rmpass.data:
+            paste.password = None
+        elif form.password.data:
+            paste.password = form.password.data
+        db.session.commit()
+        return redirect(url_for('view_paste', id=id))
+    return render_template('error.html', form.error.value())
 
 @app.route('/<id>', defaults={'format': 'redir'})
 @app.route('/<id>/<format>')

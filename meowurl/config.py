@@ -11,11 +11,12 @@ class Config:
     MEMCACHEDCLOUD_PASSWORD = None
     MEMCACHEDCLOUD_USERNAME = None
 
+    # Database / Cache Prefix
     DB_PREFIX = 'mu_'
     MEMCACHE_PREFIX = 'mu'
 
     # App configurations
-    MAX_CONTENT_LENGTH = 65536
+    MAX_CONTENT_LENGTH = 6553  # Maximum allowed paste length in bytes
     MAX_PASSWORD_LENGTH = 63
     MIN_PASSWORD_LENGTH = 6
 

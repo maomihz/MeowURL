@@ -30,7 +30,7 @@ class InviteCode(db.Model):
         c = InviteCode.check_code(code)
         if c:
             db.session.delete(c)
-            db.session.commit
+            db.session.commit()
             return True
 
     @staticmethod

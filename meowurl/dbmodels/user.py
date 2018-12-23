@@ -128,5 +128,6 @@ class User(db.Model):
 
     @classmethod
     def get_user(cls, name):
+        '''Query user from the database, with case ignored '''
         user = cls.query.get(name.lower())
         return user
