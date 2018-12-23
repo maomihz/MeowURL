@@ -7,10 +7,13 @@ from meowurl import app
 
 class NewPasteForm(FlaskForm):
     content = StringField('content', validators=[
-                          DataRequired('No Content.'),
-                          Length(message='Content too long', max=app.config['MAX_CONTENT_LENGTH'])
-                          ])
-    password = StringField('password')
+        DataRequired('No Content.'),
+        Length(message='Content too long', max=app.config['MAX_CONTENT_LENGTH'])
+    ])
+
+    password = StringField('password', validators=[
+        Length(message='Password too long', max=app.config['MAX_PASSWORD_LENGTH'])
+    ])
 
 class EditPasteForm(NewPasteForm):
     rmpass = BooleanField()
